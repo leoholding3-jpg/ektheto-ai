@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --veritas-bg: #F8FAFC;
+    --veritas-surface: #FFFFFF;
+    --veritas-border: #E2E8F0;
+    --veritas-text: #111827;
+    --veritas-muted: #4B5563;
+    --veritas-accent: #0A2A3F;
+  }
+
+  html {
+    font-family: 'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Plus Jakarta Sans', 'Source Sans 3', system-ui, sans-serif;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
