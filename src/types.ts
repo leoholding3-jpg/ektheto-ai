@@ -19,6 +19,12 @@ export type SourceTrustTier =
   | 'established_press'
   | 'web_source';
 
+export type ClaimEvidenceRelation =
+  | 'direct_support'
+  | 'direct_refutation'
+  | 'related_only'
+  | 'insufficient';
+
 export type StreamStage =
   | 'idle'
   | 'checking_cache'
@@ -74,6 +80,7 @@ export interface MatchedSourceItem {
   trustTier?: SourceTrustTier;
   relevanceScore?: number;
   claimOverlapScore?: number;
+  evidenceRelation?: ClaimEvidenceRelation;
   corroboratesClaim?: boolean;
 }
 

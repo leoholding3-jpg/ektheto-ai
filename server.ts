@@ -8,7 +8,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 import sharp from 'sharp';
 import {
   calculateEvidenceStrengthScore,
-  getIndependentCorroboratingSources,
+  getIndependentDirectEvidenceSources,
   isOfficialInstitutionalHost,
   MIN_CORROBORATION_RELEVANCE,
 } from './src/utils/evidence';
@@ -50,6 +50,8 @@ interface MatchedSourceItem {
   isFactCheck?: boolean;
   trustTier?: SourceTrustTier;
   relevanceScore?: number;
+  claimOverlapScore?: number;
+  evidenceRelation?: 'direct_support' | 'direct_refutation' | 'related_only' | 'insufficient';
 }
 
 interface FactCheckEntry {
@@ -606,6 +608,17 @@ function classifyTrustTier(sourceName: string, url: string): SourceTrustTier {
   return 'web_source';
 }
 
+function getSourceDedupeKey(
+  item: Pick<MatchedSourceItem, 'link' | 'source' | 'title'>
+): string {
+  try {
+    const url = new URL(item.link);
+    return `${url.hostname.toLowerCase()}${url.pathname.replace(/\/+$/, '')}`;
+  } catch {
+    return `${item.source.toLowerCase().trim()}::${item.title.toLowerCase().trim()}`;
+  }
+}
+
 function isLowCredibilityBlogOrForum(url: string, sourceName = ''): boolean {
   const lowerUrl = url.toLowerCase();
   const lowerSource = sourceName.toLowerCase().trim();
@@ -1111,6 +1124,8 @@ interface GroundedCrossCheckResult {
   flags: string[];
   citedAnalysis: string;
   claimStatuses: Array<{ claim: string; status: 'supported' | 'refuted' | 'misleading' | 'unverified'; note?: string }>;
+  sourceRelations: Array<'direct_support' | 'direct_refutation' | 'related_only' | 'insufficient'>;
+  factCheckRelations: Array<'direct' | 'related' | 'unknown'>;
   groundingSources: MatchedSourceItem[];
 }
 
@@ -1393,6 +1408,7 @@ interface InputUnderstandingResult {
   rewrittenQuery?: string;
   intent: VerificationIntentServer;
   extractedClaims: string[];
+  searchQueriesByClaim?: Array<Partial<Record<ServerLang, string>>>;
 }
 
 async function understandInputAndExtractClaims(
@@ -1446,7 +1462,8 @@ Tasks:
 1. Clean typos/abbreviations and normalize into a clear search query (${responseLanguageName}).
 2. Classify intent strictly as one of: factual_claim, document_audit, technical_question, vague_followup.
 3. If the input is a vague follow-up (e.g. "how do I do that?", "is that true?") and session context exists, rewrite it into a complete self-contained query; otherwise leave rewrittenQuery empty.
-4. Separate verifiable factual claims from opinions/insults/adjectives. If multiple distinct rumors or claims exist, decompose into up to 3 independent verifiable sub-claims (each concise, factual, in ${responseLanguageName}).`,
+4. Separate verifiable factual claims from opinions/insults/adjectives. If multiple distinct rumors or claims exist, decompose into up to 3 independent verifiable sub-claims (each concise, factual, in ${responseLanguageName}).
+5. For each claim, provide equivalent concise search queries in English, Portuguese, and Spanish. Preserve the exact meaning and named entities; do not add assumptions. Return one searchQueriesByClaim item per claim in the same order.`,
       config: {
         responseMimeType: 'application/json',
         responseSchema: {
@@ -1459,8 +1476,20 @@ Tasks:
               type: Type.ARRAY,
               items: { type: Type.STRING },
             },
+            searchQueriesByClaim: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  en: { type: Type.STRING },
+                  pt: { type: Type.STRING },
+                  es: { type: Type.STRING },
+                },
+                required: ['en', 'pt', 'es'],
+              },
+            },
           },
-          required: ['cleanedQuery', 'intent', 'claims'],
+          required: ['cleanedQuery', 'intent', 'claims', 'searchQueriesByClaim'],
         },
       },
     });
@@ -1470,6 +1499,7 @@ Tasks:
       intent?: string;
       rewrittenQuery?: string;
       claims?: string[];
+      searchQueriesByClaim?: Array<Partial<Record<ServerLang, string>>>;
     };
 
     const intent: VerificationIntentServer =
@@ -1483,12 +1513,23 @@ Tasks:
       .map((c) => c.trim())
       .filter((c) => c.length >= 6)
       .slice(0, 3);
+    const extractedClaims = cleanedClaims.length > 0 ? cleanedClaims : fallbackClaims;
+    const searchQueriesByClaim = extractedClaims.map((claim, index) => {
+      const queries = parsed.searchQueriesByClaim?.[index] || {};
+      return {
+        en: queries.en?.trim() || claim,
+        pt: queries.pt?.trim() || claim,
+        es: queries.es?.trim() || claim,
+      };
+    });
 
     return {
       normalizedQuery: parsed.cleanedQuery?.trim() || normalizedQuery,
       rewrittenQuery: parsed.rewrittenQuery?.trim() || fallbackRewritten,
       intent,
-      extractedClaims: cleanedClaims.length > 0 ? cleanedClaims : fallbackClaims,
+      extractedClaims,
+      searchQueriesByClaim:
+        searchQueriesByClaim.length > 0 ? searchQueriesByClaim : undefined,
     };
   } catch {
     return {
@@ -1632,7 +1673,7 @@ function matchesMetadataFilters(
 }
 
 async function rerankAndFilterCandidates(
-  query: string,
+  queries: string[],
   candidates: MatchedSourceItem[]
 ): Promise<{
   kept: MatchedSourceItem[];
@@ -1644,17 +1685,30 @@ async function rerankAndFilterCandidates(
   }
 
   const top20 = candidates.slice(0, 20);
-  const queryTokens = tokenize(query);
+  const searchQueries = Array.from(new Set(queries.map((query) => query.trim()).filter(Boolean)));
+  const queryTokenSets = searchQueries.map((query) => tokenize(query));
   const candidateTexts = top20.map(
     (c) => `${c.source}: ${c.title}${c.snippet ? ` — ${c.snippet.slice(0, 200)}` : ''}`
   );
-  const vectors = await computeBatchEmbeddings([query, ...candidateTexts]);
+  const vectors = await computeBatchEmbeddings([...searchQueries, ...candidateTexts]);
   const vectorUsed = Boolean(vectors);
 
   const scored = top20.map((item, idx) => {
-    const stats = computeOverlapStats(queryTokens, `${item.title} ${item.snippet || ''}`);
-    const lexicalScore = Math.min(1, stats.ratio);
-    const semanticScore = vectors ? Math.max(0, cosineSimilarity(vectors[0], vectors[idx + 1])) : 0;
+    const candidateText = `${item.title} ${item.snippet || ''}`;
+    const statsByQuery = queryTokenSets.map((tokens) => computeOverlapStats(tokens, candidateText));
+    const bestStats = statsByQuery.reduce(
+      (best, stats) => (stats.ratio > best.ratio ? stats : best),
+      { hits: 0, ratio: 0 }
+    );
+    const lexicalScore = Math.min(1, bestStats.ratio);
+    const semanticScore = vectors
+      ? Math.max(
+          0,
+          ...searchQueries.map((_, queryIndex) =>
+            cosineSimilarity(vectors[queryIndex], vectors[searchQueries.length + idx])
+          )
+        )
+      : 0;
 
     const rawScore = vectors
       ? semanticScore * 0.62 + lexicalScore * 0.38
@@ -1664,7 +1718,7 @@ async function rerankAndFilterCandidates(
     return {
       ...item,
       relevanceScore: clamped,
-      claimOverlapScore: stats.ratio,
+      claimOverlapScore: bestStats.ratio,
     };
   });
 
@@ -1846,24 +1900,29 @@ ${subClaimsBlock}${pageExcerpt ? `Clean text extracted from submitted URL:\n${pa
   }${numberedSources ? `Reranked High-Credibility Sources:\n${numberedSources}\n\n` : ''}
 CRITICAL SYSTEM INSTRUCTIONS:
 1. GROUNDING ONLY: Answer strictly from the retrieved documents, fact-check records, and RAG excerpts above (plus verified Google Search grounding). NEVER invent dates, numbers, facts, or URLs. If evidence is insufficient, say so explicitly and choose NO_EVIDENCE.
-2. CHAIN-OF-THOUGHT INTERNAL CHECK (do not dump raw scratchpad):
+2. EVIDENCE RELATION: For every numbered source, classify whether its title/excerpt directly supports the exact claim, directly refutes it, is merely related, or is insufficient. Shared names or keywords are not proof; a metaphorical use of a word such as "capital" does not establish a country's capital. For every FC record, mark DIRECT only if it reviews the same proposition.
+3. DOMAIN-AWARE SOURCING: Do not assume every claim is a news claim. Prefer primary texts and reputable scholarly/catalog sources for literature, archives and academic histories for history, and official legislation or court records for law. For legal claims, state jurisdiction and effective date when sources provide them; do not present this as legal advice. Model memory alone is context, never evidence.
+4. SOCIAL SOURCES: A public post may establish that an account published a statement only when its original page and provenance are available; it does not independently prove the statement's truth. Reposts and copied posts are not independent sources.
+5. CHAIN-OF-THOUGHT INTERNAL CHECK (do not dump raw scratchpad):
    - Compare consensus vs. contradictions across independent sources.
    - Check publication dates (detect old news recirculated as today).
    - Detect sensationalism, all-caps urgency bait, or distorted quotes/statistics.
-3. Classify certainty strictly as ONE of:
+6. Classify certainty strictly as ONE of:
    - CONFIRMED_MULTIPLE_SOURCES (>= 2 independent credible sources directly confirm the exact claim)
    - FALSE (certified fact-checkers or credible press explicitly refute/debunk the claim)
    - OUT_OF_CONTEXT (real news exists, but date, quote, or context is distorted)
    - EXAGGERATED (partial factual basis exists, but scope, numbers, or impact are overstated)
    - NO_EVIDENCE (insufficient corroborated evidence after quality filtering)
-4. Estimate a supporting reliability score (0–95, never 100%).
-5. If sub-claims were listed above, output their individual statuses in CLAIMS_STATUS using pipe-separated items: C1=supported|refuted|misleading|unverified; C2=...
-6. Write the final user-facing analysis in ${responseLanguageName} citing source numbers like [1], [2] (and [REF-1] for reference excerpts). ${memoryDirectives}
+7. Estimate a supporting reliability score (0–95, never 100%).
+8. If sub-claims were listed above, output their individual statuses in CLAIMS_STATUS using pipe-separated items: C1=supported|refuted|misleading|unverified; C2=...
+9. In ANALYSIS, cite direct evidence with source numbers; label related-only sources as related and never present them as proof. Write in ${responseLanguageName}, citing source numbers like [1], [2] (and [REF-1] for reference excerpts). ${memoryDirectives}
 
 Reply in EXACTLY this structure:
 CERTAINTY: CONFIRMED_MULTIPLE_SOURCES or FALSE or OUT_OF_CONTEXT or EXAGGERATED or NO_EVIDENCE
 SCORE: <integer 0-95>
 FLAGS: <comma-separated short warning signs in ${responseLanguageName}, or NONE>
+SOURCE_RELATIONS: <semicolon-separated like [1]=DIRECT_SUPPORT; [2]=RELATED_ONLY; or NONE>
+FACT_CHECK_RELATIONS: <semicolon-separated like FC-1=DIRECT; FC-2=RELATED; or NONE>
 CLAIMS_STATUS: <semicolon-separated like C1=unverified; or NONE>
 ANALYSIS: <your grounded cited analysis in ${responseLanguageName}>`;
 
@@ -1945,6 +2004,8 @@ ANALYSIS: <your grounded cited analysis in ${responseLanguageName}>`;
     );
     const scoreMatch = text.match(/SCORE:\s*(\d{1,3})/i);
     const flagsMatch = text.match(/FLAGS:\s*(.+)/i);
+    const sourceRelationsMatch = text.match(/SOURCE_RELATIONS:\s*([^\r\n]*)/i);
+    const factCheckRelationsMatch = text.match(/FACT_CHECK_RELATIONS:\s*([^\r\n]*)/i);
     const claimsStatusMatch = text.match(/CLAIMS_STATUS:\s*(.+)/i);
     const analysisMatch = text.match(/ANALYSIS:\s*([\s\S]+)/i);
 
@@ -1986,9 +2047,63 @@ ANALYSIS: <your grounded cited analysis in ${responseLanguageName}>`;
       status: statusMap.get(idx) || 'unverified',
     }));
 
+    const sourceRelationMap = new Map<
+      number,
+      'direct_support' | 'direct_refutation' | 'related_only' | 'insufficient'
+    >();
+    const sourceRelationPattern =
+      /\[?(\d+)\]?\s*=\s*(DIRECT_SUPPORT|DIRECT_REFUTATION|RELATED_ONLY|INSUFFICIENT)/gi;
+    let sourceRelationMatch: RegExpExecArray | null;
+    while ((sourceRelationMatch = sourceRelationPattern.exec(sourceRelationsMatch?.[1] || ''))) {
+      const index = Number(sourceRelationMatch[1]) - 1;
+      if (index >= 0 && index < retrievedSources.slice(0, 8).length) {
+        const relation = sourceRelationMatch[2].toUpperCase();
+        sourceRelationMap.set(
+          index,
+          relation === 'DIRECT_SUPPORT'
+            ? 'direct_support'
+            : relation === 'DIRECT_REFUTATION'
+              ? 'direct_refutation'
+              : relation === 'RELATED_ONLY'
+                ? 'related_only'
+                : 'insufficient'
+        );
+      }
+    }
+
+    const factCheckRelationMap = new Map<number, 'direct' | 'related'>();
+    const factCheckRelationPattern = /FC-(\d+)\s*=\s*(DIRECT|RELATED)/gi;
+    let factCheckRelationMatch: RegExpExecArray | null;
+    while (
+      (factCheckRelationMatch = factCheckRelationPattern.exec(
+        factCheckRelationsMatch?.[1] || ''
+      ))
+    ) {
+      const index = Number(factCheckRelationMatch[1]) - 1;
+      if (index >= 0 && index < factChecks.slice(0, 4).length) {
+        factCheckRelationMap.set(
+          index,
+          factCheckRelationMatch[2].toUpperCase() === 'DIRECT' ? 'direct' : 'related'
+        );
+      }
+    }
+
     const citedAnalysis = analysisMatch ? analysisMatch[1].trim() : '';
 
-    return { verdict, score: parsedScore, flags, citedAnalysis, claimStatuses, groundingSources };
+    return {
+      verdict,
+      score: parsedScore,
+      flags,
+      citedAnalysis,
+      claimStatuses,
+      sourceRelations: retrievedSources
+        .slice(0, 8)
+        .map((_, index) => sourceRelationMap.get(index) || 'insufficient'),
+      factCheckRelations: factChecks
+        .slice(0, 4)
+        .map((_, index) => factCheckRelationMap.get(index) || 'unknown'),
+      groundingSources,
+    };
   } catch {
     return null;
   }
@@ -2259,6 +2374,17 @@ async function runVerificationPipeline(
     understanding.extractedClaims.length > 0
       ? understanding.extractedClaims
       : [searchQueryText].filter(Boolean);
+  const rerankQueries = Array.from(
+    new Set(
+      [
+        searchQueryText,
+        ...subClaimsToSearch,
+        ...(understanding.searchQueriesByClaim || []).flatMap((queries) =>
+          Object.values(queries)
+        ),
+      ].filter((query): query is string => Boolean(query?.trim()))
+    )
+  );
 
   // Stage 2: Hybrid Retrieval (Vector Embeddings + Keyword + Official Fact-Check + Whitelist + Metadata Filters)
   onStage?.('retrieving_sources');
@@ -2269,40 +2395,69 @@ async function runVerificationPipeline(
     3
   );
 
-  const claimSearchResults = await Promise.all(
-    subClaimsToSearch.slice(0, 3).map(async (subClaim) => {
-      const cleaned = stripRumorIntros(subClaim.replace(/https?:\/\/\S+/g, '').trim());
-      if (!cleaned || cleaned.length < 4) {
-        return {
-          rssResult: { newsMatches: [] as RssArticle[], factCheckMatches: [] as RssArticle[] },
-          factCheckEntries: [] as FactCheckEntry[],
-          tavilySources: [] as MatchedSourceItem[],
-          serperSources: [] as MatchedSourceItem[],
+  const claimSearchResults = (
+    await Promise.all(
+      subClaimsToSearch.slice(0, 3).map(async (subClaim, claimIndex) => {
+        const translatedQueries = understanding.searchQueriesByClaim?.[claimIndex] || {};
+        const queriesByLanguage: Partial<Record<ServerLang, string>> = {
+          ...translatedQueries,
+          [lang]: subClaim,
         };
-      }
-      const [
-        rssResult,
-        factCheckEntries,
-        googleCseSources,
-        gnewsSources,
-        tavilySources,
-        serperSources,
-      ] = await Promise.all([
-        searchPublicRssForClaim(cleaned, lang),
-        searchGoogleFactCheckTools(cleaned, lang),
-        searchGoogleCustomSearchIfConfigured(cleaned, lang),
-        searchGNewsIfConfigured(cleaned, lang),
-        searchTavilyIfConfigured(cleaned),
-        searchSerperIfConfigured(cleaned, lang),
-      ]);
-      return {
-        rssResult,
-        factCheckEntries,
-        tavilySources: [...googleCseSources, ...gnewsSources, ...tavilySources],
-        serperSources,
-      };
-    })
-  );
+
+        return Promise.all(
+          (['en', 'pt', 'es'] as ServerLang[]).map(async (searchLang) => {
+            const cleaned = stripRumorIntros(
+              (queriesByLanguage[searchLang] || '').replace(/https?:\/\/\S+/g, '').trim()
+            );
+            if (!cleaned || cleaned.length < 4) {
+              return {
+                rssResult: {
+                  newsMatches: [] as RssArticle[],
+                  factCheckMatches: [] as RssArticle[],
+                },
+                factCheckEntries: [] as FactCheckEntry[],
+                tavilySources: [] as MatchedSourceItem[],
+                serperSources: [] as MatchedSourceItem[],
+              };
+            }
+
+            const isSelectedLanguage = searchLang === lang;
+            const [
+              rssResult,
+              factCheckEntries,
+              googleCseSources,
+              gnewsSources,
+              tavilySources,
+              serperSources,
+            ] = await Promise.all([
+              searchPublicRssForClaim(cleaned, searchLang),
+              isSelectedLanguage
+                ? searchGoogleFactCheckTools(cleaned, searchLang)
+                : Promise.resolve([] as FactCheckEntry[]),
+              isSelectedLanguage
+                ? searchGoogleCustomSearchIfConfigured(cleaned, searchLang)
+                : Promise.resolve([] as MatchedSourceItem[]),
+              isSelectedLanguage
+                ? searchGNewsIfConfigured(cleaned, searchLang)
+                : Promise.resolve([] as MatchedSourceItem[]),
+              isSelectedLanguage
+                ? searchTavilyIfConfigured(cleaned)
+                : Promise.resolve([] as MatchedSourceItem[]),
+              isSelectedLanguage
+                ? searchSerperIfConfigured(cleaned, searchLang)
+                : Promise.resolve([] as MatchedSourceItem[]),
+            ]);
+            return {
+              rssResult,
+              factCheckEntries,
+              tavilySources: [...googleCseSources, ...gnewsSources, ...tavilySources],
+              serperSources,
+            };
+          })
+        );
+      })
+    )
+  ).flat();
 
   const ragHybrid = await ragPromise;
   const ragChunks = ragHybrid.chunks;
@@ -2329,14 +2484,14 @@ async function runVerificationPipeline(
         isFactCheck: true,
         trustTier: 'fact_checker',
       };
-      const key = fcRss.source.toLowerCase().trim();
+      const key = getSourceDedupeKey(candidate);
       if (!matchedSourcesMap.has(key) && matchesMetadataFilters(candidate, body.metadataFilters)) {
         matchedSourcesMap.set(key, candidate);
       }
     }
 
     for (const src of [...resBundle.tavilySources, ...resBundle.serperSources]) {
-      const key = src.source.toLowerCase().trim();
+      const key = getSourceDedupeKey(src);
       if (!matchedSourcesMap.has(key) && matchesMetadataFilters(src, body.metadataFilters)) {
         matchedSourcesMap.set(key, src);
       }
@@ -2352,7 +2507,7 @@ async function runVerificationPipeline(
         isFactCheck: looksLikeDebunkHeadline(item.title, item.source),
         trustTier: classifyTrustTier(item.source, item.link),
       };
-      const key = item.source.toLowerCase().trim();
+      const key = getSourceDedupeKey(candidate);
       if (!matchedSourcesMap.has(key) && matchesMetadataFilters(candidate, body.metadataFilters)) {
         matchedSourcesMap.set(key, candidate);
       }
@@ -2381,7 +2536,7 @@ async function runVerificationPipeline(
   // Stage 3: Top-20 Reranking & Quality Cutoff Threshold
   onStage?.('reranking_sources');
   const rerankOutcome = await rerankAndFilterCandidates(
-    searchQueryText,
+    rerankQueries,
     rawCandidates
   );
 
@@ -2430,10 +2585,19 @@ async function runVerificationPipeline(
         )
       : null;
 
+  preAiSources.forEach((source, index) => {
+    source.evidenceRelation = aiCrossCheck?.sourceRelations[index] || 'insufficient';
+  });
+
+  const directlyRelevantFactCheckEntries = relevantFactCheckEntries
+    .slice(0, 4)
+    .filter((_, index) => aiCrossCheck?.factCheckRelations[index] === 'direct');
+
   if (aiCrossCheck?.groundingSources) {
     for (const g of aiCrossCheck.groundingSources) {
-      const key = g.source.toLowerCase().trim();
+      const key = getSourceDedupeKey(g);
       if (!matchedSourcesMap.has(key) && matchesMetadataFilters(g, body.metadataFilters)) {
+        g.evidenceRelation = 'insufficient';
         preAiSources.push(g);
         matchedSourcesMap.set(key, g);
       }
@@ -2453,8 +2617,16 @@ async function runVerificationPipeline(
       tierOrder[a.trustTier || 'web_source'] - tierOrder[b.trustTier || 'web_source']
   );
 
-  const corroboratingSources = getIndependentCorroboratingSources(independentlyRerankedSources);
-  const leadEvidence = corroboratingSources[0] || matchedSources[0];
+  const directEvidenceSources = getIndependentDirectEvidenceSources(
+    independentlyRerankedSources
+  );
+  const supportingEvidenceSources = directEvidenceSources.filter(
+    (source) => source.evidenceRelation === 'direct_support'
+  );
+  const refutingEvidenceSources = directEvidenceSources.filter(
+    (source) => source.evidenceRelation === 'direct_refutation'
+  );
+  const leadEvidence = directEvidenceSources[0] || matchedSources[0];
   if (!realSource && leadEvidence) {
     realSource = leadEvidence.source;
   }
@@ -2481,19 +2653,23 @@ async function runVerificationPipeline(
     }
   }
 
-  const sourcesCount = corroboratingSources.length;
+  const sourcesCount = directEvidenceSources.length;
+  const supportingSourcesCount = supportingEvidenceSources.length;
 
   // Structured Certainty Classification across 5 Verdict Categories
-  const corroboratingFactChecks = corroboratingSources.filter(
-    (source) => source.isFactCheck && source.trustTier === 'fact_checker'
+  const corroboratingFactChecks = directEvidenceSources.filter(
+    (source) =>
+      source.evidenceRelation === 'direct_refutation' &&
+      source.isFactCheck &&
+      source.trustTier === 'fact_checker'
   );
   const hasDebunkHeadline = corroboratingFactChecks.length > 0;
-  const hasFactCheckFalse = relevantFactCheckEntries.some(
+  const hasFactCheckFalse = directlyRelevantFactCheckEntries.some(
     (fc) =>
       classifyTrustTier(fc.publisher, fc.url) === 'fact_checker' &&
       /\b(false|falso|falsa|fake|pants on fire|hoax|bulo|mentira)\b/i.test(fc.rating)
   );
-  const hasFactCheckMisleading = relevantFactCheckEntries.some(
+  const hasFactCheckMisleading = directlyRelevantFactCheckEntries.some(
     (fc) =>
       classifyTrustTier(fc.publisher, fc.url) === 'fact_checker' &&
       /\b(misleading|enganoso|enganosa|out of context|fora de contexto|fuera de contexto|partly|exaggerated|exagerado)\b/i.test(
@@ -2504,9 +2680,10 @@ async function runVerificationPipeline(
   const cleanTokens = tokenize(cleanedSearchQuery);
   const requiredRatio = hasRumorFraming ? 0.8 : 0.55;
 
-  const strictlyCorroboratingNews = getIndependentCorroboratingSources(
+  const strictlyCorroboratingNews = getIndependentDirectEvidenceSources(
     independentlyRerankedSources.filter((source) => {
       if (
+        source.evidenceRelation !== 'direct_support' ||
         source.isFactCheck ||
         !allRssNewsMatches.some(
           (item) =>
@@ -2540,14 +2717,14 @@ async function runVerificationPipeline(
     hasFactCheckFalse ||
     hasDebunkHeadline ||
     (aiCrossCheck?.verdict === 'FALSE' &&
-      (sourcesCount >= 2 || corroboratingFactChecks.length > 0))
+      (refutingEvidenceSources.length >= 2 || corroboratingFactChecks.length > 0))
   ) {
     seal = 'false_claim';
     sealLabel = msgs.falseLabel;
     certaintyLabel = msgs.certaintyFalse;
   } else if (
     aiCrossCheck?.verdict === 'EXAGGERATED' &&
-    (sourcesCount > 0 || relevantFactCheckEntries.length > 0)
+    (sourcesCount > 0 || directlyRelevantFactCheckEntries.length > 0)
   ) {
     seal = 'exaggerated';
     sealLabel = msgs.exaggeratedLabel;
@@ -2555,7 +2732,7 @@ async function runVerificationPipeline(
   } else if (
     hasFactCheckMisleading ||
     (aiCrossCheck?.verdict === 'OUT_OF_CONTEXT' &&
-      (sourcesCount > 0 || relevantFactCheckEntries.length > 0)) ||
+      (sourcesCount > 0 || directlyRelevantFactCheckEntries.length > 0)) ||
     (Boolean(dateWarning) && sourcesCount > 0)
   ) {
     seal = 'out_of_context';
@@ -2563,14 +2740,14 @@ async function runVerificationPipeline(
     certaintyLabel = msgs.certaintyOutOfContext;
   } else if (
     Boolean(realOriginalLink) &&
-    sourcesCount >= 2 &&
+    supportingSourcesCount >= 2 &&
     (aiCrossCheck?.verdict === 'CONFIRMED_MULTIPLE_SOURCES' ||
       (!aiCrossCheck && strictlyCorroboratingNews.length >= 2))
   ) {
     seal = 'verified_public_sources';
     sealLabel = msgs.verifiedLabel;
     certaintyLabel = msgs.certaintyConfirmed;
-  } else if (sourcesCount >= 2 && hasRumorFraming) {
+  } else if (supportingSourcesCount >= 2 && hasRumorFraming) {
     seal = 'out_of_context';
     sealLabel = msgs.outOfContextLabel;
     certaintyLabel = msgs.certaintyOutOfContext;
@@ -2589,8 +2766,8 @@ async function runVerificationPipeline(
     citedAnalysis = msgs.noteCutoffInsufficient;
   } else if (aiVerdictRejectedByEvidence || (matchedSources.length > 0 && sourcesCount === 0)) {
     citedAnalysis = msgs.noteInsufficientCorroboration;
-  } else if (!citedAnalysis && corroboratingSources.length > 0) {
-    const topCitations = corroboratingSources
+  } else if (!citedAnalysis && directEvidenceSources.length > 0) {
+    const topCitations = directEvidenceSources
       .slice(0, 2)
       .map((m, idx) => `[${idx + 1}] ${m.source}`)
       .join(', ');
@@ -2655,7 +2832,7 @@ async function runVerificationPipeline(
     new Set([...(aiCrossCheck?.flags || []), ...deterministicFlags])
   ).slice(0, 4);
 
-  const reliabilityScore = calculateEvidenceStrengthScore(corroboratingSources);
+  const reliabilityScore = calculateEvidenceStrengthScore(directEvidenceSources);
 
   const defaultClaimStatus: ExtractedClaimResultServer['status'] =
     seal === 'verified_public_sources'
@@ -2691,15 +2868,17 @@ async function runVerificationPipeline(
     matchedSources: matchedSources
       .map((source) => ({
         ...source,
-        corroboratesClaim: corroboratingSources.some(
+        corroboratesClaim:
+          source.evidenceRelation === 'direct_support' &&
+          directEvidenceSources.some(
           (item) =>
             item.source === source.source &&
             item.title === source.title &&
             item.link === source.link
-        ),
+          ),
       }))
       .slice(0, 8),
-    factChecks: relevantFactCheckEntries.slice(0, 4),
+    factChecks: directlyRelevantFactCheckEntries,
     citedAnalysis: finalAnalysis,
     extractedClaims: finalExtractedClaims,
     dateWarning,

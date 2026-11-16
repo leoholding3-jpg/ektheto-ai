@@ -114,6 +114,10 @@ export interface TranslationBundle {
     scoreDisclaimer: string;
     sourceMatchDisclaimer: string;
     sourceCorroboratesClaim: string;
+    sourceDirectSupport: string;
+    sourceDirectRefutation: string;
+    sourceRelatedOnly: string;
+    sourceInsufficient: string;
     redFlagsHeading: string;
     noRedFlags: string;
     limitationsHeading: string;
@@ -438,8 +442,12 @@ const TRANSLATIONS: Record<AppLanguage, TranslationBundle> = {
       reliabilityHeading: 'Evidence strength (indicator)',
       scoreDisclaimer: 'Evidence-strength indicator, not the probability that the claim is true.',
       sourceMatchDisclaimer:
-        'Search results may be related without proving the exact claim. Only sources marked as corroborating count toward the independent-source total.',
+        'Search results may be related without proving the exact claim. Only sources marked as directly supporting or refuting it count as evidence.',
       sourceCorroboratesClaim: 'Meets independent evidence criteria',
+      sourceDirectSupport: 'Directly supports this claim',
+      sourceDirectRefutation: 'Directly contradicts this claim',
+      sourceRelatedOnly: 'Related only — not counted as evidence',
+      sourceInsufficient: 'This source does not establish the claim',
       redFlagsHeading: 'Detected signals',
       noRedFlags: 'No linguistic warning signs detected',
       limitationsHeading: 'Important limitations',
@@ -850,8 +858,12 @@ const TRANSLATIONS: Record<AppLanguage, TranslationBundle> = {
       reliabilityHeading: 'Força das evidências (indicador)',
       scoreDisclaimer: 'Indicador da força das evidências, não da probabilidade de a alegação ser verdadeira.',
       sourceMatchDisclaimer:
-        'Os resultados podem ser relacionados sem provar a alegação exata. Só as fontes marcadas como corroborantes contam no total de fontes independentes.',
+        'Os resultados podem ser relacionados sem provar a alegação exata. Só fontes marcadas como apoio ou refutação direta contam como prova.',
       sourceCorroboratesClaim: 'Cumpre os critérios de evidência independente',
+      sourceDirectSupport: 'Apoia diretamente esta alegação',
+      sourceDirectRefutation: 'Contradiz diretamente esta alegação',
+      sourceRelatedOnly: 'Apenas relacionada — não conta como prova',
+      sourceInsufficient: 'Esta fonte não comprova a alegação',
       redFlagsHeading: 'Sinais de alerta detetados',
       noRedFlags: 'Sem sinais de alerta linguísticos detetados',
       limitationsHeading: 'Limitações importantes',
@@ -1262,8 +1274,12 @@ const TRANSLATIONS: Record<AppLanguage, TranslationBundle> = {
       reliabilityHeading: 'Fuerza de la evidencia (indicador)',
       scoreDisclaimer: 'Indicador de la fuerza de la evidencia, no de la probabilidad de que la afirmación sea verdadera.',
       sourceMatchDisclaimer:
-        'Los resultados pueden estar relacionados sin probar la afirmación exacta. Solo las fuentes marcadas como corroborantes cuentan en el total de fuentes independientes.',
+        'Los resultados pueden estar relacionados sin probar la afirmación exacta. Solo las fuentes marcadas como apoyo o refutación directa cuentan como prueba.',
       sourceCorroboratesClaim: 'Cumple los criterios de evidencia independiente',
+      sourceDirectSupport: 'Apoya directamente esta afirmación',
+      sourceDirectRefutation: 'Contradice directamente esta afirmación',
+      sourceRelatedOnly: 'Solo relacionada — no cuenta como prueba',
+      sourceInsufficient: 'Esta fuente no demuestra la afirmación',
       redFlagsHeading: 'Señales de alerta detectadas',
       noRedFlags: 'Sin señales de alerta lingüísticas detectadas',
       limitationsHeading: 'Limitaciones importantes',

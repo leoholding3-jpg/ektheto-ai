@@ -3,7 +3,7 @@ import test from 'node:test';
 import type { MatchedSourceItem } from '../src/types';
 import {
   calculateEvidenceStrengthScore,
-  getIndependentCorroboratingSources,
+  getIndependentDirectEvidenceSources,
   getPublisherIdentity,
   isOfficialInstitutionalHost,
 } from '../src/utils/evidence';
@@ -12,7 +12,8 @@ function source(
   publisher: string,
   relevanceScore: number,
   trustTier: MatchedSourceItem['trustTier'] = 'established_press',
-  claimOverlapScore = relevanceScore
+  claimOverlapScore = relevanceScore,
+  evidenceRelation: MatchedSourceItem['evidenceRelation'] = 'direct_support'
 ): MatchedSourceItem {
   return {
     title: 'Test source',
@@ -22,6 +23,7 @@ function source(
     relevanceScore,
     claimOverlapScore,
     trustTier,
+    evidenceRelation,
   };
 }
 
@@ -33,12 +35,22 @@ test('only strong, credible, independent publishers count as corroboration', () 
     source('A weak match', 0.69),
     source('An unreviewed blog', 0.95, 'web_source'),
     source('Weak lexical overlap', 0.99, 'established_press', 0.4),
+    source('Related headline', 0.99, 'established_press', 0.99, 'related_only'),
   ];
 
   assert.deepEqual(
-    getIndependentCorroboratingSources(candidates).map((item) => item.source),
+    getIndependentDirectEvidenceSources(candidates).map((item) => item.source),
     ['Reuters', 'AP News']
   );
+});
+
+test('direct refutations count as evidence but related-only sources do not', () => {
+  const directRefutation = source('Reuters', 0.9, 'established_press', 0.9, 'direct_refutation');
+  const relatedSource = source('Associated Press', 0.99, 'established_press', 0.99, 'related_only');
+
+  assert.deepEqual(getIndependentDirectEvidenceSources([directRefutation, relatedSource]), [
+    directRefutation,
+  ]);
 });
 
 test('publisher aliases normalize so the same outlet is not counted twice', () => {

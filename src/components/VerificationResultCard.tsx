@@ -363,32 +363,52 @@ export function VerificationResultCard({
               {t.sourceMatchDisclaimer}
             </p>
             <ul className="mt-4 divide-y divide-[#E2E8F0] dark:divide-slate-700">
-              {result.matchedSources.map((src, idx) => (
-                <li key={`${src.link}-${idx}`} className="py-3 first:pt-0 last:pb-0">
-                  <a
-                    href={src.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group block"
-                  >
-                    <p className="text-base font-medium text-[#111827] group-hover:underline dark:text-slate-100">
-                      <span className="mr-2 font-mono text-sm text-[#6B7280] dark:text-slate-400 tabular-nums">
-                        [{idx + 1}]
-                      </span>
-                      {src.title}
-                    </p>
-                    <p className="mt-1 text-sm text-[#4B5563] dark:text-slate-400 tabular-nums">
-                      {src.source} · {trustLabel(src.trustTier)}
-                      {src.publishedAt ? ` · ${formatDateLocalized(src.publishedAt, lang)}` : ''}
-                    </p>
-                    {src.corroboratesClaim && (
-                      <p className="mt-1 text-xs font-semibold text-emerald-800 dark:text-emerald-400">
-                        {t.sourceCorroboratesClaim}
+              {result.matchedSources.map((src, idx) => {
+                const relationLabels = {
+                  direct_support: t.sourceDirectSupport,
+                  direct_refutation: t.sourceDirectRefutation,
+                  related_only: t.sourceRelatedOnly,
+                  insufficient: t.sourceInsufficient,
+                };
+                const relationLabel = src.evidenceRelation
+                  ? relationLabels[src.evidenceRelation]
+                  : src.corroboratesClaim
+                    ? t.sourceCorroboratesClaim
+                    : '';
+                const relationClassName =
+                  src.evidenceRelation === 'direct_support'
+                    ? 'text-emerald-800 dark:text-emerald-400'
+                    : src.evidenceRelation === 'direct_refutation'
+                      ? 'text-rose-800 dark:text-rose-400'
+                      : 'text-[#6B7280] dark:text-slate-400';
+
+                return (
+                  <li key={`${src.link}-${idx}`} className="py-3 first:pt-0 last:pb-0">
+                    <a
+                      href={src.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block"
+                    >
+                      <p className="text-base font-medium text-[#111827] group-hover:underline dark:text-slate-100">
+                        <span className="mr-2 font-mono text-sm text-[#6B7280] dark:text-slate-400 tabular-nums">
+                          [{idx + 1}]
+                        </span>
+                        {src.title}
                       </p>
-                    )}
-                  </a>
-                </li>
-              ))}
+                      <p className="mt-1 text-sm text-[#4B5563] dark:text-slate-400 tabular-nums">
+                        {src.source} · {trustLabel(src.trustTier)}
+                        {src.publishedAt ? ` · ${formatDateLocalized(src.publishedAt, lang)}` : ''}
+                      </p>
+                      {relationLabel && (
+                        <p className={`mt-1 text-xs font-semibold ${relationClassName}`}>
+                          {relationLabel}
+                        </p>
+                      )}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

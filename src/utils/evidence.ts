@@ -1,4 +1,4 @@
-import type { MatchedSourceItem, SourceTrustTier } from '../types';
+import type { ClaimEvidenceRelation, MatchedSourceItem, SourceTrustTier } from '../types';
 
 export const MIN_CORROBORATION_RELEVANCE = 0.7;
 export const MIN_CLAIM_OVERLAP = 0.65;
@@ -62,7 +62,13 @@ export function getPublisherIdentity(source: string): string {
   return normalized;
 }
 
-export function getIndependentCorroboratingSources(
+export function isDirectClaimEvidenceRelation(
+  relation: ClaimEvidenceRelation | undefined
+): boolean {
+  return relation === 'direct_support' || relation === 'direct_refutation';
+}
+
+export function getIndependentDirectEvidenceSources(
   sources: MatchedSourceItem[],
   minimumRelevance = MIN_CORROBORATION_RELEVANCE
 ): MatchedSourceItem[] {
@@ -71,6 +77,7 @@ export function getIndependentCorroboratingSources(
   for (const source of sources) {
     if (
       source.trustTier === 'web_source' ||
+      !isDirectClaimEvidenceRelation(source.evidenceRelation) ||
       typeof source.relevanceScore !== 'number' ||
       source.relevanceScore < minimumRelevance ||
       typeof source.claimOverlapScore !== 'number' ||
@@ -89,23 +96,23 @@ export function getIndependentCorroboratingSources(
 }
 
 export function calculateEvidenceStrengthScore(sources: MatchedSourceItem[]): number {
-  const corroboratingSources = getIndependentCorroboratingSources(sources);
-  if (corroboratingSources.length === 0) return 10;
+  const directEvidenceSources = getIndependentDirectEvidenceSources(sources);
+  if (directEvidenceSources.length === 0) return 10;
 
   const averageRelevance =
-    corroboratingSources.reduce((sum, source) => sum + (source.relevanceScore || 0), 0) /
-    corroboratingSources.length;
+    directEvidenceSources.reduce((sum, source) => sum + (source.relevanceScore || 0), 0) /
+    directEvidenceSources.length;
   const averageTrust =
-    corroboratingSources.reduce(
+    directEvidenceSources.reduce(
       (sum, source) => sum + TRUST_WEIGHT[source.trustTier || 'web_source'],
       0
-    ) / corroboratingSources.length;
+    ) / directEvidenceSources.length;
 
   return Math.min(
     95,
     Math.round(
       10 +
-        Math.min(corroboratingSources.length, 4) * 14 +
+        Math.min(directEvidenceSources.length, 4) * 14 +
         averageRelevance * 22 +
         averageTrust * 15
     )
