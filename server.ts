@@ -104,7 +104,7 @@ const SERVER_MESSAGES: Record<
     exaggeratedLabel: 'Exaggerated / Overstated',
     falseLabel: 'False',
     certaintyConfirmed: 'Confirmed by multiple sources',
-    certaintyNoEvidence: 'No evidence',
+    certaintyNoEvidence: 'Insufficient evidence',
     certaintyOutOfContext: 'Out of context',
     certaintyExaggerated: 'Exaggerated',
     certaintyFalse: 'False',
@@ -116,7 +116,8 @@ const SERVER_MESSAGES: Record<
       'Related public news exists, but the claim distorts context or mixes facts.',
     noteExaggerated:
       'A partial factual basis exists, but the wording or numbers are significantly exaggerated.',
-    noteOneSource: 'Only 1 source found. No independent confirmation from other public sources.',
+    noteOneSource:
+      'Only 1 source met the strong-match and independence criteria. Other related sources may be listed, but they do not count as corroboration; the claim remains unverified, not disproved.',
     noteNoMedia: 'No public sources were found confirming this media file.',
     mediaExtractionFailed:
       'Could not extract readable text or a clear claim from this media file. No verification was performed; provide a transcript, caption, or clearer file.',
@@ -124,7 +125,7 @@ const SERVER_MESSAGES: Record<
     noteCutoffInsufficient:
       'No retrieved documents passed the minimum relevance quality threshold. Insufficient verified evidence to confirm.',
     noteInsufficientCorroboration:
-      'Retrieved results do not provide two sufficiently relevant, independent credible sources confirming this exact claim. The verdict remains unverified.',
+      'Retrieved results do not provide two sufficiently relevant, independent credible sources confirming this exact claim. The verdict is unverified; this does not mean the claim is false.',
     dateWarningOld: (days: number) =>
       `Source publication date is ${days} days old, while the message frames it as current/urgent.`,
   },
@@ -137,7 +138,7 @@ const SERVER_MESSAGES: Record<
     exaggeratedLabel: 'Exagerado / Distorcido',
     falseLabel: 'Falso',
     certaintyConfirmed: 'Confirmado por múltiplas fontes',
-    certaintyNoEvidence: 'Sem evidências',
+    certaintyNoEvidence: 'Evidência insuficiente',
     certaintyOutOfContext: 'Fora de contexto',
     certaintyExaggerated: 'Exagerado',
     certaintyFalse: 'Falso',
@@ -149,7 +150,8 @@ const SERVER_MESSAGES: Record<
       'Existem notícias com termos parecidos, mas a afirmação está fora de contexto ou mistura factos.',
     noteExaggerated:
       'Existe um fundo factual parcial, mas os números ou afirmações foram significativamente exagerados.',
-    noteOneSource: 'Apenas 1 fonte encontrada. Sem confirmação independente de outras fontes públicas.',
+    noteOneSource:
+      'Apenas 1 fonte cumpriu os critérios de correspondência forte e independência. Outras fontes relacionadas podem aparecer na lista, mas não contam como corroboração; a alegação continua não verificada, não refutada.',
     noteNoMedia: 'Não foram encontradas fontes públicas que confirmem este ficheiro multimédia.',
     mediaExtractionFailed:
       'Não foi possível extrair texto legível ou uma alegação clara deste ficheiro multimédia. A verificação não foi realizada; forneça uma transcrição, legenda ou ficheiro mais nítido.',
@@ -157,7 +159,7 @@ const SERVER_MESSAGES: Record<
     noteCutoffInsufficient:
       'Nenhum resultado atingiu o corte mínimo de relevância. Sem provas verificadas suficientes para confirmar.',
     noteInsufficientCorroboration:
-      'Os resultados não apresentam duas fontes credíveis, independentes e suficientemente relevantes que confirmem esta alegação exata. O veredito permanece não verificado.',
+      'Os resultados não apresentam duas fontes credíveis, independentes e suficientemente relevantes que confirmem esta alegação exata. O veredito é não verificado; isso não significa que a alegação seja falsa.',
     dateWarningOld: (days: number) =>
       `A publicação original tem ${days} dias, mas o texto apresenta o caso como urgente ou atual.`,
   },
@@ -170,7 +172,7 @@ const SERVER_MESSAGES: Record<
     exaggeratedLabel: 'Exagerado / Distorsionado',
     falseLabel: 'Falso',
     certaintyConfirmed: 'Confirmado por múltiples fuentes',
-    certaintyNoEvidence: 'Sin evidencias',
+    certaintyNoEvidence: 'Evidencia insuficiente',
     certaintyOutOfContext: 'Fuera de contexto',
     certaintyExaggerated: 'Exagerado',
     certaintyFalse: 'Falso',
@@ -182,7 +184,8 @@ const SERVER_MESSAGES: Record<
       'Existen noticias con palabras similares, pero el mensaje está fuera de contexto o mezcla hechos.',
     noteExaggerated:
       'Existe cierta base real, pero las cifras o afirmaciones han sido exageradas significativamente.',
-    noteOneSource: 'Solo se encontró 1 fuente. Sin confirmación independiente de otras fuentes públicas.',
+    noteOneSource:
+      'Solo 1 fuente cumplió los criterios de coincidencia fuerte e independencia. Pueden aparecer otras fuentes relacionadas, pero no cuentan como corroboración; la afirmación sigue sin verificarse, no refutada.',
     noteNoMedia: 'No se encontraron fuentes públicas que confirmen este archivo multimedia.',
     mediaExtractionFailed:
       'No se pudo extraer texto legible ni una afirmación clara de este archivo multimedia. No se realizó la verificación; proporciona una transcripción, un subtítulo o un archivo más nítido.',
@@ -190,7 +193,7 @@ const SERVER_MESSAGES: Record<
     noteCutoffInsufficient:
       'Ningún documento superó el umbral mínimo de relevancia. No hay evidencia suficiente para confirmar.',
     noteInsufficientCorroboration:
-      'Los resultados no aportan dos fuentes creíbles, independientes y suficientemente relevantes que confirmen esta afirmación exacta. El veredicto sigue sin verificarse.',
+      'Los resultados no aportan dos fuentes creíbles, independientes y suficientemente relevantes que confirmen esta afirmación exacta. El veredicto no está verificado; esto no significa que la afirmación sea falsa.',
     dateWarningOld: (days: number) =>
       `La publicación original tiene ${days} días, aunque el mensaje la presenta como urgente o actual.`,
   },
