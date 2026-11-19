@@ -340,6 +340,11 @@ class TestSightengineRequest(unittest.TestCase):
 class TestStreamlitInterface(unittest.TestCase):
     app_path = Path(__file__).parents[1] / "app.py"
 
+    def test_brand_tagline_uses_requested_message(self) -> None:
+        self.assertEqual(TEXT["pt"]["tagline"], "Expor o que é falso. Revelar o que é real.")
+        self.assertEqual(TEXT["en"]["tagline"], "Expose what is false. Reveal what is real.")
+        self.assertEqual(TEXT["es"]["tagline"], "Exponer lo falso. Revelar lo real.")
+
     def test_app_starts_with_analysis_news_and_history_tabs(self) -> None:
         app_test = AppTest.from_file(str(self.app_path)).run()
         self.assertEqual(len(app_test.exception), 0)

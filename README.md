@@ -2,7 +2,7 @@
 
 ![Captura da aplicação Ektheto](assets/ektheto-app-screenshot.png)
 
-> **Verificação clara. Evidência pública.**
+> **Expor o que é falso. Revelar o que é real.**
 
 O **Ektheto** é uma aplicação Streamlit para analisar imagens e identificar sinais associados a conteúdo gerado por inteligência artificial. A interface valida o formato, o tamanho e as dimensões do ficheiro antes de enviar a imagem para a API do Sightengine. O resultado é apresentado como um indicador automatizado, acompanhado de um aviso de que não constitui prova de autenticidade.
 

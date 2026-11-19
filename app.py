@@ -39,7 +39,7 @@ LANGUAGES = {"pt": "Português", "en": "English", "es": "Español"}
 TEXT: dict[str, dict[str, str]] = {
     "pt": {
         "title": "Ektheto — Detector de deepfakes",
-        "tagline": "Analisa imagens em busca de sinais de geração por IA.",
+        "tagline": "Expor o que é falso. Revelar o que é real.",
         "description": (
             "Carrega uma imagem e consulta o Sightengine. O ficheiro só é enviado "
             "quando selecionas Analisar; não guardamos a imagem nem o histórico "
@@ -114,7 +114,7 @@ TEXT: dict[str, dict[str, str]] = {
     },
     "en": {
         "title": "Ektheto — Deepfake detector",
-        "tagline": "Check images for signs of AI generation.",
+        "tagline": "Expose what is false. Reveal what is real.",
         "description": (
             "Upload an image and check it with Sightengine. The file is sent only "
             "when you select Analyze; neither the image nor history is stored beyond "
@@ -187,7 +187,7 @@ TEXT: dict[str, dict[str, str]] = {
     },
     "es": {
         "title": "Ektheto — Detector de deepfakes",
-        "tagline": "Busca señales de generación por IA en imágenes.",
+        "tagline": "Exponer lo falso. Revelar lo real.",
         "description": (
             "Carga una imagen y consulta Sightengine. El archivo solo se envía "
             "al seleccionar Analizar; ni la imagen ni el historial se guardan "
