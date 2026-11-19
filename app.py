@@ -37,9 +37,8 @@ LANGUAGES = {"pt": "Português", "en": "English", "es": "Español"}
 
 TEXT: dict[str, dict[str, str]] = {
     "pt": {
-        "title": "Ektheto — Análise de imagem",
-        "image_section": "Análise de imagens",
-        "tagline": "Analisa imagens para identificar sinais de conteúdo sintético.",
+        "title": "Ektheto — Detector de deepfakes",
+        "tagline": "Analisa imagens em busca de sinais de geração por IA.",
         "description": (
             "Carrega uma imagem e consulta o Sightengine. O ficheiro só é enviado "
             "quando selecionas Analisar; não guardamos a imagem nem o histórico "
@@ -47,18 +46,14 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "language": "Idioma",
         "analysis_tab": "Analisar imagem",
-        "news_tab": "Radar Ektheto 3D",
+        "news_tab": "Radar de notícias (demo)",
         "news_demo_notice": (
-            "Demonstração local. Os resultados são simulados por regras de texto; "
-            "não consultam fontes externas."
-        ),
-        "demo_missing_file": (
-            "Não foi possível abrir o Radar Ektheto 3D. Confirma o ficheiro da interface."
+            "Demonstração visual: as classificações são simuladas por palavras-chave. "
+            "Não consulta fontes, APIs nem verifica factos."
         ),
         "history_tab": "Histórico da sessão",
         "upload": "Seleciona uma imagem (JPG, PNG, WEBP ou BMP)",
         "analyze": "Analisar imagem",
-        "loading": "A analisar imagem",
         "missing_credentials": (
             "A análise não está configurada. Define SIGHTENGINE_USER e "
             "SIGHTENGINE_SECRET no ambiente ou no ficheiro .env."
@@ -78,15 +73,15 @@ TEXT: dict[str, dict[str, str]] = {
         "provider_rate_limit": "O limite de pedidos do serviço foi atingido. Tenta mais tarde.",
         "invalid_response": "O serviço devolveu uma resposta inválida.",
         "result": "Resultado da análise",
-        "score": "Sinal de conteúdo sintético",
-        "high": "Sinais fortes de conteúdo sintético",
+        "score": "Sinal de geração por IA",
+        "high": "Sinais elevados de geração por IA",
         "high_detail": (
-            "O serviço encontrou sinais compatíveis com conteúdo sintético. "
+            "O serviço encontrou sinais compatíveis com geração por IA. "
             "Isto não prova que a imagem seja falsa."
         ),
-        "low": "Poucos sinais de conteúdo sintético",
+        "low": "Poucos sinais de geração por IA",
         "low_detail": (
-            "O serviço encontrou poucos sinais de conteúdo sintético. "
+            "O serviço encontrou poucos sinais de geração por IA. "
             "Isto não garante que a imagem seja autêntica."
         ),
         "inconclusive": "Resultado inconclusivo",
@@ -105,14 +100,13 @@ TEXT: dict[str, dict[str, str]] = {
         "clear_history": "Limpar histórico da sessão",
         "history_cleared": "Histórico da sessão apagado.",
         "time": "Hora",
-        "history_score": "Sinal sintético",
+        "history_score": "Sinal IA",
         "history_result": "Resultado",
         "version": "Detector de imagens · análise privada por sessão",
     },
     "en": {
-        "title": "Ektheto — Image analysis",
-        "image_section": "Image analysis",
-        "tagline": "Checks images for signs of synthetic content.",
+        "title": "Ektheto — Deepfake detector",
+        "tagline": "Check images for signs of AI generation.",
         "description": (
             "Upload an image and check it with Sightengine. The file is sent only "
             "when you select Analyze; neither the image nor history is stored beyond "
@@ -120,16 +114,14 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "language": "Language",
         "analysis_tab": "Analyze image",
-        "news_tab": "Radar Ektheto 3D",
+        "news_tab": "News radar (demo)",
         "news_demo_notice": (
-            "Local demonstration. Results are simulated from text rules; "
-            "no external sources are queried."
+            "Visual demo: classifications are simulated from keywords. "
+            "It does not query sources or APIs and does not verify facts."
         ),
-        "demo_missing_file": "Could not load Radar Ektheto 3D. Check the interface file.",
         "history_tab": "Session history",
         "upload": "Choose an image (JPG, PNG, WEBP, or BMP)",
         "analyze": "Analyze image",
-        "loading": "Analyzing image",
         "missing_credentials": (
             "Analysis is not configured. Set SIGHTENGINE_USER and "
             "SIGHTENGINE_SECRET in the environment or .env file."
@@ -149,15 +141,15 @@ TEXT: dict[str, dict[str, str]] = {
         "provider_rate_limit": "The service request limit was reached. Try again later.",
         "invalid_response": "The service returned an invalid response.",
         "result": "Analysis result",
-        "score": "Synthetic-content signal",
-        "high": "Strong synthetic-content signals",
+        "score": "AI-generation signal",
+        "high": "Strong AI-generation signals",
         "high_detail": (
-            "The service found signals consistent with synthetic content. "
+            "The service found signals consistent with AI generation. "
             "This does not prove the image is fake."
         ),
-        "low": "Few synthetic-content signals",
+        "low": "Few AI-generation signals",
         "low_detail": (
-            "The service found few synthetic-content signals. "
+            "The service found few AI-generation signals. "
             "This does not guarantee the image is authentic."
         ),
         "inconclusive": "Inconclusive result",
@@ -176,14 +168,13 @@ TEXT: dict[str, dict[str, str]] = {
         "clear_history": "Clear session history",
         "history_cleared": "Session history cleared.",
         "time": "Time",
-        "history_score": "Synthetic signal",
+        "history_score": "AI signal",
         "history_result": "Result",
         "version": "Image detector · private session analysis",
     },
     "es": {
-        "title": "Ektheto — Análisis de imágenes",
-        "image_section": "Análisis de imágenes",
-        "tagline": "Analiza imágenes para detectar señales de contenido sintético.",
+        "title": "Ektheto — Detector de deepfakes",
+        "tagline": "Busca señales de generación por IA en imágenes.",
         "description": (
             "Carga una imagen y consulta Sightengine. El archivo solo se envía "
             "al seleccionar Analizar; ni la imagen ni el historial se guardan "
@@ -191,18 +182,14 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "language": "Idioma",
         "analysis_tab": "Analizar imagen",
-        "news_tab": "Radar Ektheto 3D",
+        "news_tab": "Radar de noticias (demo)",
         "news_demo_notice": (
-            "Demostración local. Los resultados se simulan mediante reglas de texto; "
-            "no se consultan fuentes externas."
-        ),
-        "demo_missing_file": (
-            "No se pudo abrir Radar Ektheto 3D. Comprueba el archivo de la interfaz."
+            "Demostración visual: las clasificaciones se simulan mediante palabras clave. "
+            "No consulta fuentes ni APIs y no verifica hechos."
         ),
         "history_tab": "Historial de sesión",
         "upload": "Selecciona una imagen (JPG, PNG, WEBP o BMP)",
         "analyze": "Analizar imagen",
-        "loading": "Analizando imagen",
         "missing_credentials": (
             "El análisis no está configurado. Define SIGHTENGINE_USER y "
             "SIGHTENGINE_SECRET en el entorno o en el archivo .env."
@@ -222,15 +209,15 @@ TEXT: dict[str, dict[str, str]] = {
         "provider_rate_limit": "Se alcanzó el límite de solicitudes. Inténtalo más tarde.",
         "invalid_response": "El servicio devolvió una respuesta no válida.",
         "result": "Resultado del análisis",
-        "score": "Señal de contenido sintético",
-        "high": "Señales altas de contenido sintético",
+        "score": "Señal de generación por IA",
+        "high": "Señales altas de generación por IA",
         "high_detail": (
-            "El servicio encontró señales compatibles con contenido sintético. "
+            "El servicio encontró señales compatibles con generación por IA. "
             "Esto no demuestra que la imagen sea falsa."
         ),
-        "low": "Pocas señales de contenido sintético",
+        "low": "Pocas señales de generación por IA",
         "low_detail": (
-            "El servicio encontró pocas señales de contenido sintético. "
+            "El servicio encontró pocas señales de generación por IA. "
             "Esto no garantiza que la imagen sea auténtica."
         ),
         "inconclusive": "Resultado no concluyente",
@@ -249,7 +236,7 @@ TEXT: dict[str, dict[str, str]] = {
         "clear_history": "Borrar historial de sesión",
         "history_cleared": "Historial de sesión borrado.",
         "time": "Hora",
-        "history_score": "Señal sintética",
+        "history_score": "Señal IA",
         "history_result": "Resultado",
         "version": "Detector de imágenes · análisis privado por sesión",
     },
@@ -383,32 +370,30 @@ def analyze_image(image_bytes: bytes, api_user: str, api_secret: str) -> float:
 
 
 def main() -> None:
-    app_icon = Path(__file__).parent / "assets" / "ektheto-logo-dark.png"
     st.set_page_config(
-        page_title="Ektheto — Análise de imagem",
-        page_icon=str(app_icon),
+        page_title="Ektheto — Deepfake detector",
+        page_icon="🛡️",
         layout="centered",
     )
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
         :root {
-            --ekt-background: #101418;
-            --ekt-surface: #1a2026;
-            --ekt-border: #36404a;
-            --ekt-accent: #8295a5;
-            --ekt-text: #e8edf1;
-            --ekt-muted: #a2adb7;
+            --ekt-navy: #0a1128;
+            --ekt-card: #111b3d;
+            --ekt-cyan: #00d2ff;
+            --ekt-blue: #3a7bd5;
+            --ekt-gradient: linear-gradient(110deg, var(--ekt-cyan), var(--ekt-blue));
         }
         html, body, .stApp, [class*="css"], button, input, textarea, select {
             font-family: 'Inter', sans-serif;
         }
         html, body, .stApp, [data-testid="stAppViewContainer"],
         [data-testid="stMain"], [data-testid="stSidebar"] {
-            background: var(--ekt-background) !important;
-            color: var(--ekt-text);
+            background: var(--ekt-navy) !important;
+            color: #ffffff;
         }
         #MainMenu, footer, [data-testid="stToolbar"],
         [data-testid="stDecoration"], [data-testid="stDeployButton"],
@@ -416,7 +401,7 @@ def main() -> None:
             display: none !important;
         }
         [data-testid="stHeader"] {
-            background: var(--ekt-background) !important;
+            background: rgba(10, 17, 40, 0.92) !important;
         }
         [data-testid="stMainBlockContainer"] {
             max-width: 780px;
@@ -430,104 +415,84 @@ def main() -> None:
         [data-testid="stMarkdownContainer"] h1, [data-testid="stMarkdownContainer"] h2,
         [data-testid="stMarkdownContainer"] h3,
         [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
-            color: var(--ekt-text);
+            color: #ffffff;
         }
         [data-testid="stFileUploaderDropzone"],
         [data-testid="stFileUploader"] section,
         [data-testid="stFileUploadDropzone"] {
-            border: 1px dashed var(--ekt-border);
-            border-radius: 8px;
-            background: var(--ekt-surface);
-            color: var(--ekt-text);
-            transition: border-color 100ms ease;
+            border: 1.5px dashed transparent;
+            border-radius: 14px;
+            background: linear-gradient(var(--ekt-card), var(--ekt-card)) padding-box,
+                        var(--ekt-gradient) border-box;
+            color: #ffffff;
+            transition: background-color 160ms ease, transform 160ms ease;
         }
         [data-testid="stFileUploaderDropzone"]:hover,
         [data-testid="stFileUploader"] section:hover,
         [data-testid="stFileUploadDropzone"]:hover {
-            border-color: var(--ekt-accent);
+            background: linear-gradient(#16244d, #16244d) padding-box,
+                        var(--ekt-gradient) border-box;
         }
         [data-testid="stFileUploaderDropzone"],
         [data-testid="stFileUploadDropzone"] {
-            color: var(--ekt-text);
+            color: #ffffff;
         }
         [data-testid="stFileUploader"] small,
         [data-testid="stFileUploader"] label,
         [data-testid="stFileUploader"] button {
-            color: var(--ekt-muted) !important;
+            color: #dbeafe !important;
         }
         div.stButton > button,
         [data-testid="stButton"] > button {
             width: 100%;
             min-height: 3rem;
-            border: 1px solid var(--ekt-accent);
-            border-radius: 8px;
-            background: var(--ekt-accent);
-            color: #101418;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: background-color 100ms ease;
+            border: 0;
+            border-radius: 10px;
+            background: var(--ekt-gradient);
+            color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(0, 160, 230, 0.2);
+            transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
         }
         div.stButton > button:hover,
         [data-testid="stButton"] > button:hover {
-            border-color: var(--ekt-accent);
-            background: #a7b7c4;
-            color: #101418;
+            border: 0;
+            background: var(--ekt-gradient);
+            color: #ffffff;
+            transform: scale(1.02);
+            box-shadow: 0 12px 30px rgba(0, 160, 230, 0.32);
+            filter: brightness(1.08);
         }
         div.stButton > button:focus:not(:active),
         [data-testid="stButton"] > button:focus:not(:active) {
-            color: #101418;
-            outline: 2px solid var(--ekt-accent);
-            outline-offset: 2px;
+            color: #ffffff;
+            border-color: #00d2ff;
+            box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.25);
         }
         [data-testid="stAlert"], [data-testid="stAlertContainer"] {
-            border: 1px solid var(--ekt-border);
-            border-radius: 8px;
-            background: var(--ekt-surface) !important;
-            color: var(--ekt-text);
+            border: 1px solid rgba(148, 180, 255, 0.14);
+            border-radius: 14px;
+            background: var(--ekt-card) !important;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+            color: #ffffff;
         }
         [data-testid="stAlert"] [data-testid="stMarkdownContainer"] p,
         [data-testid="stAlertContainer"] [data-testid="stMarkdownContainer"] p {
-            color: var(--ekt-text) !important;
+            color: #ffffff !important;
         }
         [data-testid="stMetric"] {
             padding: 1rem 1.1rem;
-            border: 1px solid var(--ekt-border);
-            border-radius: 8px;
-            background: var(--ekt-surface);
-        }
-        .ekt-loading {
-            margin: 1rem 0;
-            padding: 1rem;
-            border: 1px solid var(--ekt-border);
-            border-radius: 8px;
-            background: var(--ekt-surface);
-        }
-        .ekt-loading-label {
-            margin: 0 0 0.85rem;
-            color: var(--ekt-muted);
-            font-size: 0.85rem;
-        }
-        .ekt-skeleton-line {
-            height: 0.7rem;
-            margin-top: 0.55rem;
-            border-radius: 3px;
-            background: #303840;
-            animation: ekt-pulse 1.2s ease-in-out infinite alternate;
-        }
-        .ekt-skeleton-line.short { width: 46%; }
-        .ekt-skeleton-line.medium { width: 72%; }
-        @keyframes ekt-pulse {
-            from { opacity: 0.52; }
-            to { opacity: 0.88; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .ekt-skeleton-line { animation: none; }
+            border: 1px solid rgba(148, 180, 255, 0.14);
+            border-radius: 14px;
+            background: var(--ekt-card);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
         }
         [data-testid="stTabs"] [role="tab"] {
-            color: var(--ekt-muted);
+            color: #b9c7e6;
         }
         [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-            color: var(--ekt-text);
+            color: #ffffff;
         }
         @media (max-width: 600px) {
             .block-container {
@@ -537,6 +502,10 @@ def main() -> None:
             }
             .ekt-hero {
                 padding-top: 1rem;
+            }
+            div.stButton > button:hover,
+            [data-testid="stButton"] > button:hover {
+                transform: scale(1.01);
             }
         }
         .ekt-hero {
@@ -570,9 +539,7 @@ def main() -> None:
             st.image(str(logo_path), width=160)
         else:
             st.markdown("## Ektheto")
-        st.caption(
-            TEXT.get(st.session_state["language"], TEXT["pt"])["image_section"]
-        )
+        st.caption("Deepfake image detector")
         selected_language = st.selectbox(
             "Language / Idioma",
             options=tuple(LANGUAGES),
@@ -629,23 +596,8 @@ def main() -> None:
                 st.error(text["missing_credentials"])
             elif image_bytes is not None:
                 try:
-                    loading = st.empty()
-                    with loading.container():
-                        st.markdown(
-                            f"""
-                            <div class="ekt-loading" role="status" aria-live="polite">
-                                <p class="ekt-loading-label">{text["loading"]}</p>
-                                <div class="ekt-skeleton-line medium"></div>
-                                <div class="ekt-skeleton-line"></div>
-                                <div class="ekt-skeleton-line short"></div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-                    try:
+                    with st.spinner(text["analysis_tab"]):
                         score = analyze_image(image_bytes, api_user, api_secret)
-                    finally:
-                        loading.empty()
                 except ValueError as exc:
                     if str(exc) == "size":
                         st.error(text["large_image"])
@@ -688,7 +640,7 @@ def main() -> None:
 
     with news_tab:
         st.warning(text["news_demo_notice"])
-        demo_path = Path(__file__).parent / "assets" / "radar-ektheto-3d.html"
+        demo_path = Path(__file__).parent / "assets" / "fato-radar-demo.html"
         if demo_path.is_file():
             components.html(
                 demo_path.read_text(encoding="utf-8"),
@@ -696,7 +648,7 @@ def main() -> None:
                 scrolling=True,
             )
         else:
-            st.error(text["demo_missing_file"])
+            st.error("The news radar demo file is missing.")
 
     with history_tab:
         st.caption(text["history_notice"])

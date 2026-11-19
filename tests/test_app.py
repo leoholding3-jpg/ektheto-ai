@@ -332,7 +332,7 @@ class TestStreamlitInterface(unittest.TestCase):
             [tab.label for tab in app_test.tabs],
             [
                 "Analisar imagem",
-                "Radar Ektheto 3D",
+                "Radar de notícias (demo)",
                 "Histórico da sessão",
             ],
         )
@@ -343,7 +343,7 @@ class TestStreamlitInterface(unittest.TestCase):
         self.assertEqual(len(app_test.exception), 0)
         self.assertTrue(
             any(
-                "simulados por regras de texto" in warning.value
+                "simuladas por palavras-chave" in warning.value
                 for warning in app_test.warning
             )
         )
@@ -355,8 +355,8 @@ class TestStreamlitInterface(unittest.TestCase):
             str(getattr(element, "value", "")) for element in app_test.markdown
         )
         for expected_style in (
-            "--ekt-background: #101418",
-            "--ekt-accent",
+            "--ekt-navy: #0a1128",
+            "--ekt-gradient",
             "[data-testid=\"stButton\"] > button",
             "[data-testid=\"stFileUploadDropzone\"]",
             "[data-testid=\"stAlert\"]",
@@ -364,30 +364,6 @@ class TestStreamlitInterface(unittest.TestCase):
         ):
             with self.subTest(expected_style=expected_style):
                 self.assertIn(expected_style, injected_styles)
-
-    def test_radar_ui_uses_name_and_restricted_visual_system(self) -> None:
-        radar_html = (self.app_path.parent / "assets" / "radar-ektheto-3d.html").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("<title>Radar Ektheto 3D</title>", radar_html)
-        self.assertIn("font-family: Inter, system-ui, sans-serif", radar_html)
-        self.assertNotIn("linear-gradient", radar_html)
-        self.assertNotIn("radial-gradient", radar_html)
-        self.assertNotIn("box-shadow", radar_html)
-        self.assertNotIn("Space Grotesk", radar_html)
-        self.assertNotIn("FatoRadar", radar_html)
-        self.assertIn("controls.enableZoom = true", radar_html)
-
-    def test_ui_copy_avoids_ai_branding(self) -> None:
-        visible_copy = " ".join(
-            value
-            for language in TEXT.values()
-            for value in language.values()
-            if isinstance(value, str)
-        )
-        self.assertNotIn(" por IA", visible_copy)
-        self.assertNotIn("AI ", visible_copy)
-        self.assertNotIn("Sinal IA", visible_copy)
 
     def test_uploader_advertises_all_requested_extensions(self) -> None:
         app_test = AppTest.from_file(str(self.app_path)).run()
