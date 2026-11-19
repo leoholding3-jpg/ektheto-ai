@@ -48,6 +48,16 @@ def main() -> None:
         except PlaywrightTimeoutError as exc:
             browser.close()
             raise SystemExit("Streamlit loaded, but its app content did not become visible.") from exc
+        radar_tab = page.get_by_role("tab", name="EkthetoRadar")
+        if radar_tab.count():
+            radar_tab.click()
+            try:
+                page.frame_locator("iframe").locator("#radar-3d canvas").wait_for(
+                    state="visible", timeout=30_000
+                )
+            except PlaywrightTimeoutError as exc:
+                browser.close()
+                raise SystemExit("EkthetoRadar did not finish loading.") from exc
         dismiss_notice = page.get_by_role("button", name="Don't show again")
         if dismiss_notice.count():
             dismiss_notice.click()

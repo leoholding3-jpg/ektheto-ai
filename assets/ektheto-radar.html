@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EkthetoRadar | Leitura de informação</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f4f1;
+      --surface: #ffffff;
+      --ink: #181a1b;
+      --muted: #62686b;
+      --line: #d8dad8;
+      --accent: #c44b32;
+      --accent-soft: #f6e9e5;
+      --canvas: #202629;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, system-ui, sans-serif; font-size: 14px; line-height: 1.55; }
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    .shell { width: min(1160px, calc(100% - 48px)); margin: 0 auto; }
+    .masthead { background: var(--surface); border-bottom: 1px solid var(--line); }
+    .masthead-row { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: max-content; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: -.04em; }
+    .brand-name { font-size: 19px; line-height: 1; font-weight: 700; letter-spacing: -.055em; }
+    .brand-name span { color: var(--accent); }
+    .nav { height: 72px; display: flex; align-items: center; gap: 26px; color: #353a3c; font-size: 12px; font-weight: 600; }
+    .nav a { height: 100%; display: flex; align-items: center; border-bottom: 2px solid transparent; }
+    .nav a:hover, .nav a:focus-visible { border-color: var(--accent); color: var(--accent); }
+    .edition { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .ticker { background: #202629; color: #f4f4f1; }
+    .ticker-row { min-height: 38px; display: flex; align-items: center; gap: 14px; font-size: 11px; }
+    .ticker-label { color: #f2a38f; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .ticker-copy { color: #d5d8d8; }
+    main { padding: 34px 0 48px; }
+    .page-intro { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+    .eyebrow { margin: 0 0 8px; color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { max-width: 690px; margin: 0; font-size: clamp(28px, 4vw, 43px); line-height: 1.1; letter-spacing: -.055em; font-weight: 600; }
+    .intro-copy { max-width: 360px; margin: 0; color: var(--muted); font-size: 12px; }
+    .demo-notice { display: flex; align-items: flex-start; gap: 10px; margin: 20px 0; padding: 11px 14px; border: 1px solid #dfc5bd; background: #fbf4f1; color: #603a30; font-size: 11px; }
+    .notice-mark { width: 17px; height: 17px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-size: 10px; font-weight: 700; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 20px; align-items: stretch; }
+    .panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); }
+    .panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 17px 20px; border-bottom: 1px solid var(--line); }
+    .section-title { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: -.015em; }
+    .panel-kicker { color: var(--muted); font-size: 10px; }
+    .input-panel { padding-bottom: 17px; }
+    .input-content { padding: 18px 20px 0; }
+    .segmented { display: flex; gap: 4px; padding-bottom: 14px; }
+    .segment { min-height: 32px; padding: 0 12px; border: 1px solid var(--line); background: #fff; color: #50575a; font-size: 11px; font-weight: 600; }
+    .segment[aria-selected="true"] { border-color: var(--ink); background: var(--ink); color: #fff; }
+    label { display: block; margin-bottom: 7px; color: #555c5f; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+    textarea { display: block; width: 100%; min-height: 155px; resize: vertical; padding: 13px; border: 1px solid #bfc4c3; border-radius: 0; outline: none; background: #fff; color: var(--ink); font-size: 13px; line-height: 1.55; }
+    textarea::placeholder { color: #858b8d; }
+    textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .field-error { min-height: 18px; margin: 6px 0 0; color: #a63224; font-size: 11px; }
+    .input-footer { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 11px; }
+    .helper { max-width: 330px; margin: 0; color: var(--muted); font-size: 10px; }
+    .primary-button { min-height: 38px; padding: 0 17px; border: 1px solid var(--accent); border-radius: 0; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; }
+    .primary-button:hover { background: #a93d29; }
+    .primary-button:focus-visible, .segment:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .visual-panel { position: relative; min-height: 350px; overflow: hidden; background: var(--canvas); color: #fff; }
+    .visual-top { position: absolute; z-index: 2; top: 15px; left: 17px; right: 17px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .visual-label, .status-pill { padding: 5px 8px; border: 1px solid #596165; color: #e6e8e7; font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+    .status-pill { color: #f1c9be; border-color: #79584f; }
+    #radar-3d { position: absolute; inset: 0; }
+    #radar-3d canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+    #radar-3d canvas:active { cursor: grabbing; }
+    .visual-caption { position: absolute; z-index: 2; bottom: 14px; left: 17px; margin: 0; color: #c4cac9; font-size: 10px; }
+    .result-panel { margin-top: 20px; }
+    .result-grid { display: grid; grid-template-columns: minmax(220px, 1fr) 1fr 1fr 1fr; }
+    .result-cell { min-height: 96px; padding: 17px 19px; border-right: 1px solid var(--line); }
+    .result-cell:last-child { border-right: 0; }
+    .result-label { display: block; margin-bottom: 9px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .result-value { display: block; color: var(--ink); font-size: 12px; font-weight: 600; }
+    .score-value { color: var(--accent); font-size: 18px; font-weight: 700; }
+    .methodology { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 20px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .method-item { padding: 16px 18px 17px 0; }
+    .method-item + .method-item { padding-left: 18px; border-left: 1px solid var(--line); }
+    .method-item h3 { margin: 0 0 5px; font-size: 11px; font-weight: 700; }
+    .method-item p { margin: 0; color: var(--muted); font-size: 10px; }
+    footer { padding: 18px 0 28px; color: var(--muted); font-size: 10px; }
+    .footer-row { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 28px, 620px); }
+      .masthead-row { min-height: 62px; }
+      .nav { height: 62px; gap: 14px; font-size: 10px; }
+      .nav a:nth-child(3) { display: none; }
+      .edition { display: none; }
+      .page-intro { display: block; }
+      .intro-copy { margin-top: 12px; }
+      .workspace { grid-template-columns: 1fr; }
+      .visual-panel { min-height: 300px; }
+      .result-grid { grid-template-columns: 1fr 1fr; }
+      .result-cell:nth-child(2) { border-right: 0; }
+      .result-cell:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .methodology { grid-template-columns: 1fr; }
+      .method-item, .method-item + .method-item { padding: 13px 0; border-left: 0; }
+      .method-item + .method-item { border-top: 1px solid var(--line); }
+    }
+    @media (max-width: 460px) {
+      .nav a:nth-child(2) { display: none; }
+      .brand-name { font-size: 17px; }
+      .ticker-row { align-items: flex-start; padding: 9px 0; }
+      .input-footer { align-items: stretch; flex-direction: column; }
+      .primary-button { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="shell masthead-row">
+      <a class="brand" href="#top" aria-label="EkthetoRadar, início">
+        <span class="brand-mark" aria-hidden="true">ER</span>
+        <span class="brand-name">Ektheto<span>Radar</span></span>
+      </a>
+      <nav class="nav" aria-label="Navegação principal">
+        <a href="#analisar">Analisar</a>
+        <a href="#resultado-card">Resultado</a>
+        <a href="#metodologia">Metodologia</a>
+      </nav>
+      <span class="edition">Informação · Edição digital</span>
+    </div>
+  </header>
+  <div class="ticker"><div class="shell ticker-row"><span class="ticker-label">Estado</span><span class="ticker-copy">Demonstração local · sem consulta a fontes externas</span></div></div>
+
+  <main class="shell" id="top">
+    <section class="page-intro">
+      <div><p class="eyebrow">Leitura de informação</p><h1>Observe os sinais antes de partilhar uma notícia.</h1></div>
+      <p class="intro-copy">Introduza texto para ver padrões de linguagem assinalados pela demonstração. O resultado não confirma factos nem avalia a credibilidade de uma fonte.</p>
+    </section>
+
+    <div class="demo-notice" role="note"><span class="notice-mark" aria-hidden="true">i</span><span><strong>Modo de demonstração.</strong> A classificação é simulada por palavras-chave. URLs não são abertas e fontes externas não são consultadas.</span></div>
+
+    <section class="workspace" id="analisar" aria-label="Análise demonstrativa">
+      <div class="panel input-panel">
+        <div class="panel-heading"><h2 class="section-title">Analisar conteúdo</h2><span class="panel-kicker">Entrada manual</span></div>
+        <div class="input-content">
+          <div class="segmented" role="tablist" aria-label="Tipo de entrada">
+            <button class="segment" id="tab-texto" type="button" role="tab" aria-selected="true" onclick="switchTab('texto')">Texto</button>
+            <button class="segment" id="tab-url" type="button" role="tab" aria-selected="false" onclick="switchTab('url')">URL</button>
+          </div>
+          <label for="input-conteudo">Conteúdo a analisar</label>
+          <textarea id="input-conteudo" rows="5" placeholder="Cole aqui o texto da notícia."></textarea>
+          <p class="field-error" id="input-error" role="status" aria-live="polite"></p>
+          <div class="input-footer"><p class="helper">Para analisar termos, cole o texto. A demonstração não acede a páginas através de URLs.</p><button class="primary-button" type="button" onclick="simularAnalise()">Analisar texto</button></div>
+        </div>
+      </div>
+
+      <div class="visual-panel" aria-label="Visualização tridimensional do estado da demonstração">
+        <div class="visual-top"><span class="visual-label">Visualização 3D</span><span class="status-pill" id="radar-status-pill" aria-live="polite">Em espera</span></div>
+        <div id="radar-3d"></div>
+        <p class="visual-caption">Arraste para rodar · roda do rato para ampliar</p>
+      </div>
+    </section>
+
+    <section class="panel result-panel" id="resultado-card" aria-live="polite">
+      <div class="panel-heading"><h2 class="section-title">Indicador da demonstração</h2><span class="panel-kicker">Não é uma verificação factual</span></div>
+      <div class="result-grid">
+        <div class="result-cell"><span class="result-label">Padrão identificado</span><span class="result-value" id="res-titulo">Aguardando texto</span></div>
+        <div class="result-cell"><span class="result-label">Sinal textual</span><span class="result-value" id="res-badge">Em espera</span></div>
+        <div class="result-cell"><span class="result-label">Intensidade simulada</span><span class="result-value score-value" id="res-score-text">—</span></div>
+        <div class="result-cell"><span class="result-label">Fontes consultadas</span><span class="result-value" id="res-fontes">Nenhuma</span></div>
+      </div>
+    </section>
+
+    <section class="methodology" id="metodologia" aria-label="Limites da demonstração">
+      <div class="method-item"><h3>O que é analisado</h3><p>Correspondências simples com termos de urgência ou referência.</p></div>
+      <div class="method-item"><h3>O que não é analisado</h3><p>Autoria, contexto, fontes, imagens ou factos da notícia.</p></div>
+      <div class="method-item"><h3>Como usar o resultado</h3><p>Use-o apenas para explorar a interface. Confirme informação em fontes independentes.</p></div>
+    </section>
+  </main>
+  <footer><div class="shell footer-row"><span>EkthetoRadar · Demonstração</span><span>Os indicadores são simulados e não representam uma avaliação factual.</span></div></footer>
+
+  <script>
+    const container = document.getElementById('radar-3d');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+    camera.position.set(0, 0, 5.4);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const keyLight = new THREE.DirectionalLight(0xf0b3a3, 1.8);
+    keyLight.position.set(3, 4, 5);
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xa7b1b3, 0.8);
+    fillLight.position.set(-4, -2, 2);
+    scene.add(fillLight);
+
+    const radarGroup = new THREE.Group();
+    scene.add(radarGroup);
+    const globeMaterial = new THREE.MeshStandardMaterial({ color: 0x879294, metalness: 0.35, roughness: 0.62, wireframe: true });
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(1.18, 34, 26), globeMaterial);
+    radarGroup.add(globe);
+    const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xc44b32, transparent: true, opacity: 0.65 });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.58, 0.014, 8, 144), ringMaterial);
+    ring.rotation.x = Math.PI * 0.42;
+    radarGroup.add(ring);
+    const pointsGeometry = new THREE.BufferGeometry();
+    const points = [];
+    for (let i = 0; i < 44; i++) {
+      const phi = Math.acos(-1 + (2 * i) / 44);
+      const theta = Math.sqrt(44 * Math.PI) * phi;
+      points.push(1.2 * Math.cos(theta) * Math.sin(phi), 1.2 * Math.sin(theta) * Math.sin(phi), 1.2 * Math.cos(phi));
+    }
+    pointsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+    const markers = new THREE.Points(pointsGeometry, new THREE.PointsMaterial({ color: 0xf2c2b4, size: 0.045 }));
+    radarGroup.add(markers);
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.enableZoom = true;
+    controls.minDistance = 3.7;
+    controls.maxDistance = 7;
+
+    function resizeRadar() {
+      const width = Math.max(container.clientWidth, 1);
+      const height = Math.max(container.clientHeight, 1);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height, false);
+    }
+    new ResizeObserver(resizeRadar).observe(container);
+    resizeRadar();
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    function switchTab(type) {
+      const isUrl = type === 'url';
+      document.getElementById('tab-texto').setAttribute('aria-selected', String(!isUrl));
+      document.getElementById('tab-url').setAttribute('aria-selected', String(isUrl));
+      const input = document.getElementById('input-conteudo');
+      input.dataset.mode = type;
+      input.placeholder = isUrl ? 'Cole uma URL. A demonstração não vai abrir a página.' : 'Cole aqui o texto da notícia.';
+      document.getElementById('input-error').textContent = '';
+      input.focus();
+    }
+
+    function simularAnalise() {
+      const input = document.getElementById('input-conteudo');
+      const error = document.getElementById('input-error');
+      const content = input.value.trim();
+      error.textContent = '';
+      if (!content) {
+        error.textContent = 'Introduza o texto para continuar.';
+        input.focus();
+        return;
+      }
+      if (input.dataset.mode === 'url') {
+        error.textContent = 'A demonstração não abre URLs. Selecione Texto e cole o conteúdo da notícia.';
+        input.focus();
+        return;
+      }
+
+      const normalized = content.toLocaleLowerCase('pt');
+      let pattern = 'Sem termo de referência';
+      let signal = 'Nenhum padrão específico';
+      let intensity = 'Baixa';
+      let ringColor = 0x879294;
+      if (['urgente', 'partilhe', 'compartilhe', 'última oportunidade'].some(term => normalized.includes(term))) {
+        pattern = 'Expressões de urgência';
+        signal = 'Linguagem de pressão';
+        intensity = 'Elevada';
+        ringColor = 0xc44b32;
+      } else if (['oficial', 'relatório', 'comunicado'].some(term => normalized.includes(term))) {
+        pattern = 'Termo de referência';
+        signal = 'Referência institucional';
+        intensity = 'Moderada';
+        ringColor = 0xb47a4b;
+      }
+      document.getElementById('res-titulo').textContent = pattern;
+      document.getElementById('res-badge').textContent = signal;
+      document.getElementById('res-score-text').textContent = intensity;
+      document.getElementById('res-fontes').textContent = 'Nenhuma';
+      document.getElementById('radar-status-pill').textContent = 'Demonstração atualizada';
+      ringMaterial.color.setHex(ringColor);
+      globeMaterial.color.setHex(ringColor === 0x879294 ? 0x879294 : 0xb9a29b);
+      radarGroup.rotation.y += 0.22;
+      document.getElementById('resultado-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  </script>
+</body>
+</html>

@@ -46,10 +46,10 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "language": "Idioma",
         "analysis_tab": "Analisar imagem",
-        "news_tab": "Radar de notícias (demo)",
+        "news_tab": "EkthetoRadar",
         "news_demo_notice": (
-            "Demonstração visual: as classificações são simuladas por palavras-chave. "
-            "Não consulta fontes, APIs nem verifica factos."
+            "Demonstração local: identifica termos no texto, mas não abre URLs, "
+            "consulta fontes externas nem verifica factos."
         ),
         "history_tab": "Histórico da sessão",
         "upload": "Seleciona uma imagem (JPG, PNG, WEBP ou BMP)",
@@ -114,10 +114,10 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "language": "Language",
         "analysis_tab": "Analyze image",
-        "news_tab": "News radar (demo)",
+        "news_tab": "EkthetoRadar",
         "news_demo_notice": (
-            "Visual demo: classifications are simulated from keywords. "
-            "It does not query sources or APIs and does not verify facts."
+            "Local demo: identifies terms in text but does not open URLs, "
+            "query external sources, or verify facts."
         ),
         "history_tab": "Session history",
         "upload": "Choose an image (JPG, PNG, WEBP, or BMP)",
@@ -182,10 +182,10 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "language": "Idioma",
         "analysis_tab": "Analizar imagen",
-        "news_tab": "Radar de noticias (demo)",
+        "news_tab": "EkthetoRadar",
         "news_demo_notice": (
-            "Demostración visual: las clasificaciones se simulan mediante palabras clave. "
-            "No consulta fuentes ni APIs y no verifica hechos."
+            "Demostración local: identifica términos en el texto, pero no abre URL, "
+            "consulta fuentes externas ni verifica hechos."
         ),
         "history_tab": "Historial de sesión",
         "upload": "Selecciona una imagen (JPG, PNG, WEBP o BMP)",
@@ -640,7 +640,7 @@ def main() -> None:
 
     with news_tab:
         st.warning(text["news_demo_notice"])
-        demo_path = Path(__file__).parent / "assets" / "fato-radar-demo.html"
+        demo_path = Path(__file__).parent / "assets" / "ektheto-radar.html"
         if demo_path.is_file():
             components.html(
                 demo_path.read_text(encoding="utf-8"),

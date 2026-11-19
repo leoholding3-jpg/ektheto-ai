@@ -332,7 +332,7 @@ class TestStreamlitInterface(unittest.TestCase):
             [tab.label for tab in app_test.tabs],
             [
                 "Analisar imagem",
-                "Radar de notícias (demo)",
+                "EkthetoRadar",
                 "Histórico da sessão",
             ],
         )
@@ -343,11 +343,24 @@ class TestStreamlitInterface(unittest.TestCase):
         self.assertEqual(len(app_test.exception), 0)
         self.assertTrue(
             any(
-                "simuladas por palavras-chave" in warning.value
+                "não abre URLs" in warning.value
                 for warning in app_test.warning
             )
         )
         self.assertEqual(len(app_test.tabs), 3)
+
+    def test_ektheto_radar_uses_editorial_layout_and_transparent_demo_copy(self) -> None:
+        radar_html = (self.app_path.parent / "assets" / "ektheto-radar.html").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("<title>EkthetoRadar | Leitura de informação</title>", radar_html)
+        self.assertIn("class=\"masthead\"", radar_html)
+        self.assertIn("class=\"workspace\"", radar_html)
+        self.assertIn("fontes externas não são consultadas", radar_html)
+        self.assertIn("não confirma factos", radar_html)
+        self.assertNotIn("FatoRadar", radar_html)
+        self.assertNotIn("Reuters", radar_html)
+        self.assertIn("@media (max-width: 760px)", radar_html)
 
     def test_premium_styles_are_injected_into_the_rendered_app(self) -> None:
         app_test = AppTest.from_file(str(self.app_path)).run()
