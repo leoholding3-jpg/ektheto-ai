@@ -3,12 +3,12 @@
 
 @layer base {
   :root {
-    --veritas-bg: #F8FAFC;
-    --veritas-surface: #FFFFFF;
-    --veritas-border: #E2E8F0;
-    --veritas-text: #111827;
-    --veritas-muted: #4B5563;
-    --veritas-accent: #0A2A3F;
+    --ektheto-bg: #F8FAFC;
+    --ektheto-surface: #FFFFFF;
+    --ektheto-border: #E2E8F0;
+    --ektheto-text: #111827;
+    --ektheto-muted: #4B5563;
+    --ektheto-accent: #0A2A3F;
   }
 
   html {

@@ -24,7 +24,7 @@ import type {
 } from '../types';
 import { getTranslations } from '../i18n/translations';
 import { formatRelativeLocalized } from '../utils/formatDate';
-import { VeritasLogo } from './VeritasLogo';
+import { EkthetoLogo } from './EkthetoLogo';
 import { StreamImage } from './StreamImage';
 
 interface TabInicioProps {
@@ -171,7 +171,7 @@ export function TabInicio({
       cards.push({
         id: th.id,
         title: th.title,
-        source: th.result.source || 'VERITAS AI',
+        source: th.result.source || 'Ektheto',
         publishedAt: th.createdAt,
         seal: th.result.seal,
         category: topic.category,
@@ -214,7 +214,7 @@ export function TabInicio({
         className="rounded-lg border border-[#E2E8F0] bg-white p-6 dark:border-slate-700 dark:bg-[#1E293B] sm:p-8"
       >
         <div className="flex items-center gap-4">
-          <VeritasLogo size={40} className="shrink-0 text-[#0A2A3F] dark:text-white" />
+          <EkthetoLogo size={40} className="shrink-0 text-[#0A2A3F] dark:text-white" />
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-[#4B5563] dark:text-slate-300">
               {bundle.header.subtitle}
@@ -393,7 +393,7 @@ export function TabInicio({
         </div>
       </section>
 
-      {/* How VERITAS AI Works */}
+      {/* How Ektheto Works */}
       <section className="rounded-lg border border-[#E2E8F0] bg-white p-6 dark:border-slate-700 dark:bg-[#1E293B]">
         <h3 className="text-base font-semibold text-[#111827] dark:text-white">{t.howItWorks}</h3>
         <ol className="mt-4 divide-y divide-[#E2E8F0] dark:divide-slate-700">

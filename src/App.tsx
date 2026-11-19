@@ -63,7 +63,7 @@ import {
   saveThreads,
 } from './utils/storage';
 import { clearImageRamCache } from './utils/imageCache';
-import { VeritasLogo } from './components/VeritasLogo';
+import { EkthetoLogo } from './components/EkthetoLogo';
 import { OfflineIndicator } from './components/PWAInstallButton';
 import { TabInicio } from './components/TabInicio';
 import { TabVerificar } from './components/TabVerificar';
@@ -298,7 +298,7 @@ export default function App() {
         Notification.permission === 'granted'
       ) {
         try {
-          new Notification('VERITAS AI', {
+          new Notification('Ektheto', {
             body: `${t.toasts.notificationDone} ${data.sealLabel}`,
           });
         } catch {
@@ -728,10 +728,7 @@ export default function App() {
             onClick={() => setActiveTab('inicio')}
             className="flex min-w-0 shrink-0 items-center gap-2 text-left"
           >
-            <VeritasLogo size={32} className="shrink-0 text-[#0A2A3F] dark:text-white" />
-            <h1 className="text-base font-bold tracking-tight text-[#111827] dark:text-white whitespace-nowrap">
-              VERITAS AI
-            </h1>
+            <EkthetoLogo size={48} className="shrink-0" />
           </button>
 
           <nav

@@ -1,6 +1,6 @@
-# VERITAS AI
+# Ektheto
 
-VERITAS AI checks links and text against public sources and presents an evidence-based result.
+Ektheto checks links and text against public sources and presents an evidence-based result.
 
 ## Requirements
 

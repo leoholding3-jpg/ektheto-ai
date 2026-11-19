@@ -23,6 +23,7 @@ import type {
 } from '../types';
 import { getTranslations } from '../i18n/translations';
 import { getImageRamCacheStats } from '../utils/imageCache';
+import { EkthetoLogo } from './EkthetoLogo';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface TabPerfilProps {
@@ -132,14 +133,13 @@ export function TabPerfil({
       <div className="rounded-lg border border-[#E5E7EB] bg-white p-5 dark:border-slate-800 dark:bg-[#111827]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3.5">
-            <img
-              src="/assets/aistudio/WhatsApp_Image_2026-11-15_at_15.44.28_d681c03e.jpeg"
-              alt="VERITAS AI official brand emblem"
-              className="h-14 w-14 shrink-0 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] object-contain p-1 dark:border-slate-700"
+            <EkthetoLogo
+              size={56}
+              className="shrink-0 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-1 dark:border-slate-700"
             />
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-[#111827] dark:text-white">
-                VERITAS AI
+                Ektheto
               </h2>
               <p className="text-xs text-[#6B7280] dark:text-slate-400">
                 {t.subtitle} · {t.freePlan}

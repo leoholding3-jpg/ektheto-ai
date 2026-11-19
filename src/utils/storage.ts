@@ -12,19 +12,19 @@ import type {
 } from '../types';
 
 const KEYS = {
-  SAVED: 'veritas_saved_news',
-  REPORTED: 'veritas_reported_news',
-  THREADS: 'veritas_threads',
-  FOLDERS: 'veritas_folders',
-  MEMORY: 'veritas_custom_memory',
-  USAGE: 'veritas_daily_usage',
-  DARK_MODE: 'veritas_dark_mode',
-  PERMISSIONS: 'veritas_permissions',
-  COUNTRY: 'veritas_country',
-  CUSTOM_COUNTRY: 'veritas_custom_country',
-  LANGUAGE: 'veritas_language',
-  NEWS_CACHE: 'veritas_news_cache_v1',
-  IMAGE_LOAD_MODE: 'veritas_image_load_mode',
+  SAVED: 'ektheto_saved_news',
+  REPORTED: 'ektheto_reported_news',
+  THREADS: 'ektheto_threads',
+  FOLDERS: 'ektheto_folders',
+  MEMORY: 'ektheto_custom_memory',
+  USAGE: 'ektheto_daily_usage',
+  DARK_MODE: 'ektheto_dark_mode',
+  PERMISSIONS: 'ektheto_permissions',
+  COUNTRY: 'ektheto_country',
+  CUSTOM_COUNTRY: 'ektheto_custom_country',
+  LANGUAGE: 'ektheto_language',
+  NEWS_CACHE: 'ektheto_news_cache_v1',
+  IMAGE_LOAD_MODE: 'ektheto_image_load_mode',
 } as const;
 
 export const NEWS_CACHE_TTL_MS = 20 * 60 * 1000;

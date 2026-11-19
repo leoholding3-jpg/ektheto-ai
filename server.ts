@@ -349,7 +349,7 @@ async function fetchWithTimeout(url: string, timeoutMs = 8000, init?: RequestIni
       signal: controller.signal,
       redirect: 'follow',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; VeritasAI/1.0; +https://veritas.app)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Ektheto/1.0)',
         'Accept': 'application/rss+xml, application/xml, text/xml, application/json, text/html;q=0.9, */*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9,pt-PT;q=0.8,es;q=0.7',
         ...(init?.headers || {}),
@@ -1891,7 +1891,7 @@ async function analyzeAndCrossCheckWithAI(
     .filter(Boolean)
     .join(' ');
 
-  const prompt = `You are VERITAS AI, a strict investigative fact-checking Judge.
+  const prompt = `You are Ektheto, a strict investigative fact-checking Judge.
 Analyze the user's normalized claim/question:
 "${claimText.slice(0, 600)}"
 
@@ -3308,7 +3308,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`VERITAS AI server running on http://0.0.0.0:${PORT}`);
+    console.log(`Ektheto server running on http://0.0.0.0:${PORT}`);
   });
 }
 

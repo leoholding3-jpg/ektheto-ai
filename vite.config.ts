@@ -1,6 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -12,16 +11,17 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: [
-          'icon.svg',
           'apple-touch-icon.png',
           'pwa-192x192.png',
           'pwa-512x512.png',
           'pwa-maskable-512x512.png',
+          'assets/ektheto-logo-light.png',
+          'assets/ektheto-logo-dark.png',
         ],
         manifest: {
           id: '/',
-          name: 'VERITAS AI — Authenticity Verification',
-          short_name: 'VERITAS AI',
+          name: 'Ektheto — Authenticity Verification',
+          short_name: 'Ektheto',
           description:
             'Verify links, claims, news, and media against real public sources with zero-bloat streaming.',
           theme_color: '#FFFFFF',
@@ -95,7 +95,7 @@ export default defineConfig(() => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': import.meta.dirname,
       },
     },
     server: {
