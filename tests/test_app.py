@@ -319,14 +319,29 @@ class TestSightengineRequest(unittest.TestCase):
 class TestStreamlitInterface(unittest.TestCase):
     app_path = Path(__file__).parents[1] / "app.py"
 
-    def test_app_starts_with_analysis_and_history_tabs(self) -> None:
+    def test_app_starts_with_analysis_news_and_history_tabs(self) -> None:
         app_test = AppTest.from_file(str(self.app_path)).run()
         self.assertEqual(len(app_test.exception), 0)
         self.assertEqual(
             [tab.label for tab in app_test.tabs],
-            ["Analisar imagem", "Histórico da sessão"],
+            [
+                "Analisar imagem",
+                "Radar de notícias (demo)",
+                "Histórico da sessão",
+            ],
         )
         self.assertTrue(app_test.button[0].disabled)
+
+    def test_news_radar_is_loaded_and_labeled_as_a_simulation(self) -> None:
+        app_test = AppTest.from_file(str(self.app_path)).run()
+        self.assertEqual(len(app_test.exception), 0)
+        self.assertTrue(
+            any(
+                "simuladas por palavras-chave" in warning.value
+                for warning in app_test.warning
+            )
+        )
+        self.assertEqual(len(app_test.tabs), 3)
 
     def test_premium_styles_are_injected_into_the_rendered_app(self) -> None:
         app_test = AppTest.from_file(str(self.app_path)).run()

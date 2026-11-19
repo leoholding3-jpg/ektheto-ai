@@ -13,6 +13,7 @@ truststore.inject_into_ssl()
 
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 from PIL import Image, UnidentifiedImageError
 
@@ -45,6 +46,11 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "language": "Idioma",
         "analysis_tab": "Analisar imagem",
+        "news_tab": "Radar de notícias (demo)",
+        "news_demo_notice": (
+            "Demonstração visual: as classificações são simuladas por palavras-chave. "
+            "Não consulta fontes, APIs nem verifica factos."
+        ),
         "history_tab": "Histórico da sessão",
         "upload": "Seleciona uma imagem (JPG, PNG, WEBP ou BMP)",
         "analyze": "Analisar imagem",
@@ -108,6 +114,11 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "language": "Language",
         "analysis_tab": "Analyze image",
+        "news_tab": "News radar (demo)",
+        "news_demo_notice": (
+            "Visual demo: classifications are simulated from keywords. "
+            "It does not query sources or APIs and does not verify facts."
+        ),
         "history_tab": "Session history",
         "upload": "Choose an image (JPG, PNG, WEBP, or BMP)",
         "analyze": "Analyze image",
@@ -171,6 +182,11 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "language": "Idioma",
         "analysis_tab": "Analizar imagen",
+        "news_tab": "Radar de noticias (demo)",
+        "news_demo_notice": (
+            "Demostración visual: las clasificaciones se simulan mediante palabras clave. "
+            "No consulta fuentes ni APIs y no verifica hechos."
+        ),
         "history_tab": "Historial de sesión",
         "upload": "Selecciona una imagen (JPG, PNG, WEBP o BMP)",
         "analyze": "Analizar imagen",
@@ -542,8 +558,8 @@ def main() -> None:
         unsafe_allow_html=True,
     )
     st.write(text["description"])
-    analysis_tab, history_tab = st.tabs(
-        [text["analysis_tab"], text["history_tab"]]
+    analysis_tab, news_tab, history_tab = st.tabs(
+        [text["analysis_tab"], text["news_tab"], text["history_tab"]]
     )
 
     with analysis_tab:
@@ -619,6 +635,18 @@ def main() -> None:
                     else:
                         st.warning(f'{text["inconclusive"]}. {text["inconclusive_detail"]}')
                     st.caption(text["disclaimer"])
+
+    with news_tab:
+        st.warning(text["news_demo_notice"])
+        demo_path = Path(__file__).parent / "assets" / "fato-radar-demo.html"
+        if demo_path.is_file():
+            components.html(
+                demo_path.read_text(encoding="utf-8"),
+                height=1120,
+                scrolling=True,
+            )
+        else:
+            st.error("The news radar demo file is missing.")
 
     with history_tab:
         st.caption(text["history_notice"])

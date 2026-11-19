@@ -6,6 +6,8 @@
 
 O **Ektheto** é uma aplicação Streamlit para analisar imagens e identificar sinais associados a conteúdo gerado por inteligência artificial. A interface valida o formato, o tamanho e as dimensões do ficheiro antes de enviar a imagem para a API do Sightengine. O resultado é apresentado como um indicador automatizado, acompanhado de um aviso de que não constitui prova de autenticidade.
 
+A aplicação também inclui um separador com a interface visual **FatoRadar 3D** para texto e URLs. Esse separador é uma demonstração interativa: os resultados são simulados por palavras-chave e não representam uma verificação factual nem consultam fontes externas.
+
 ## Executar localmente
 
 ```powershell

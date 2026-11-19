@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FatoRadar 3D — Verificador Profissional</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/three@0.139.2/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.139.2/examples/js/controls/OrbitControls.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top right, #0f172a, #020617 65%);
+    }
+    h1, h2, .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    #radar-3d canvas {
+      display: block;
+      outline: none;
+      cursor: grab;
+    }
+    #radar-3d canvas:active {
+      cursor: grabbing;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Navbar -->
+  <header class="sticky top-0 z-50 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6">
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 font-bold text-white shadow-lg shadow-indigo-600/30">
+          FR
+        </div>
+        <span class="font-display text-lg font-bold tracking-tight text-white">Fato<span class="text-indigo-400">Radar</span> <span class="text-xs font-normal text-slate-400">3D</span></span>
+      </div>
+
+      <nav class="hidden items-center gap-7 text-sm font-medium text-slate-300 md:flex">
+        <a href="#analisador" class="transition hover:text-white">Analisador</a>
+        <a href="#resultado-card" class="transition hover:text-white">Relatório</a>
+        <a href="#recentes" class="transition hover:text-white">Checagens</a>
+      </nav>
+
+      <button class="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-500">
+        Entrar
+      </button>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+
+    <!-- HERO DIVIDIDO: Ferramenta (Esquerda) + Radar 3D Reativo (Direita) -->
+    <section id="analisador" class="grid items-center gap-8 lg:grid-cols-12">
+
+      <!-- Coluna Esquerda: Texto + Caixa de Análise -->
+      <div class="lg:col-span-7">
+        <span class="inline-flex items-center gap-2 rounded-full border border-indigo-400/30 bg-indigo-500/10 px-3.5 py-1 text-xs font-medium text-indigo-300">
+          <span class="h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          Interface 3D Reativa • Fact-Checking
+        </span>
+
+        <h1 class="font-display mt-4 text-3xl font-bold tracking-tight text-white sm:text-5xl">
+          Verifique a veracidade de qualquer notícia em segundos.
+        </h1>
+        <p class="mt-3 text-sm text-slate-400 sm:text-base">
+          Cole um texto ou link abaixo. O núcleo 3D ao lado reage visualmente ao nível de confiança detetado.
+        </p>
+
+        <!-- Card Glassmorphism do Analisador -->
+        <div class="mt-6 rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl">
+          <div class="mb-3 flex gap-2 border-b border-white/10 pb-3">
+            <button id="tab-texto" onclick="switchTab('texto')" class="rounded-lg bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white transition">
+              Analisar Texto
+            </button>
+            <button id="tab-url" onclick="switchTab('url')" class="rounded-lg px-3.5 py-1.5 text-xs font-semibold text-slate-400 transition hover:text-white">
+              Analisar URL
+            </button>
+          </div>
+
+          <textarea
+            id="input-conteudo"
+            rows="3"
+            placeholder="Teste escrevendo algo com a palavra 'urgente' ou 'oficial'..."
+            class="w-full resize-none rounded-xl border border-white/10 bg-slate-950/80 p-3.5 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          ></textarea>
+
+          <div class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <span class="text-xs text-slate-400">
+              Arraste o objeto 3D ao lado para o rodar em 360°.
+            </span>
+            <button
+              onclick="simularAnalise()"
+              class="w-full rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500 sm:w-auto"
+            >
+              Verificar Agora
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coluna Direita: Contentor 3D Dedicado -->
+      <div class="lg:col-span-5">
+        <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-md shadow-2xl">
+          <!-- Etiqueta flutuante no topo do visor 3D -->
+          <div class="pointer-events-none absolute left-4 right-4 top-4 z-10 flex items-center justify-between">
+            <span class="rounded-lg border border-white/10 bg-slate-950/70 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-300 backdrop-blur-md">
+              Radar Visual 3D
+            </span>
+            <span id="radar-status-pill" class="rounded-lg border border-indigo-400/30 bg-indigo-500/20 px-2.5 py-1 text-[11px] font-bold text-indigo-300 backdrop-blur-md">
+              ● Modo Espera
+            </span>
+          </div>
+
+          <!-- Canvas WebGL (Altura fixa para não quebrar o scroll da página) -->
+          <div id="radar-3d" class="h-[320px] w-full sm:h-[380px]"></div>
+
+          <!-- Dica inferior -->
+          <div class="pointer-events-none absolute bottom-3 left-0 right-0 text-center text-[11px] text-slate-400">
+            Clique e arraste para inspecionar o núcleo 3D
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Painel de Resultado -->
+    <section id="resultado-card" class="mt-10 rounded-2xl border border-white/10 bg-slate-900/60 p-6 backdrop-blur-md shadow-xl">
+      <div class="flex flex-col justify-between gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center">
+        <div>
+          <span class="text-xs font-medium uppercase tracking-wider text-slate-400">Relatório de Análise</span>
+          <h2 id="res-titulo" class="mt-1 text-lg font-bold text-white">Pronto para analisar — insira uma notícia acima</h2>
+        </div>
+        <span id="res-badge" class="inline-flex w-fit items-center rounded-full border border-indigo-500/30 bg-indigo-500/15 px-3.5 py-1 text-xs font-bold text-indigo-300">
+          Aguardando Conteúdo
+        </span>
+      </div>
+
+      <div class="mt-5">
+        <div class="flex items-center justify-between text-xs font-medium">
+          <span class="text-slate-400">Índice de Confiabilidade Estimado</span>
+          <span id="res-score-text" class="font-bold text-indigo-400">--%</span>
+        </div>
+        <div class="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-800">
+          <div id="res-score-bar" class="h-full rounded-full bg-indigo-500 transition-all duration-700" style="width: 50%;"></div>
+        </div>
+      </div>
+
+      <div class="mt-6 grid gap-3 sm:grid-cols-3">
+        <div class="rounded-xl border border-white/5 bg-slate-950/60 p-3.5">
+          <p class="text-xs text-slate-400">Tom Linguístico</p>
+          <p id="res-tom" class="mt-1 text-sm font-semibold text-slate-200">Em espera</p>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-slate-950/60 p-3.5">
+          <p class="text-xs text-slate-400">Fontes Primárias</p>
+          <p id="res-fontes" class="mt-1 text-sm font-semibold text-slate-200">Em espera</p>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-slate-950/60 p-3.5">
+          <p class="text-xs text-slate-400">Correspondência</p>
+          <p id="res-match" class="mt-1 text-sm font-semibold text-slate-200">Em espera</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Checagens Recentes -->
+    <section id="recentes" class="mt-14">
+      <h2 class="font-display text-2xl font-bold text-white">Checagens Recentes</h2>
+      <div class="mt-5 grid gap-5 md:grid-cols-3">
+        <article class="rounded-2xl border border-white/10 bg-slate-900/50 p-5 backdrop-blur-sm transition hover:border-white/20">
+          <span class="rounded-md bg-rose-500/15 px-2.5 py-1 text-[11px] font-bold uppercase text-rose-400">Falso</span>
+          <h3 class="mt-3 text-base font-semibold text-white">Mensagem falsa promete bónus financeiro através de link encurtado</h3>
+          <p class="mt-2 text-xs text-slate-400">Domínio não pertence a nenhuma instituição oficial.</p>
+        </article>
+
+        <article class="rounded-2xl border border-white/10 bg-slate-900/50 p-5 backdrop-blur-sm transition hover:border-white/20">
+          <span class="rounded-md bg-amber-500/15 px-2.5 py-1 text-[11px] font-bold uppercase text-amber-400">Fora de Contexto</span>
+          <h3 class="mt-3 text-base font-semibold text-white">Vídeo antigo de tempestade volta a circular como atual</h3>
+          <p class="mt-2 text-xs text-slate-400">Imagens reais de 2021 republicadas fora de contexto.</p>
+        </article>
+
+        <article class="rounded-2xl border border-white/10 bg-slate-900/50 p-5 backdrop-blur-sm transition hover:border-white/20">
+          <span class="rounded-md bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold uppercase text-emerald-400">Verificado</span>
+          <h3 class="mt-3 text-base font-semibold text-white">Novo calendário oficial divulgado pelo ministério</h3>
+          <p class="mt-2 text-xs text-slate-400">Dados confirmados nos portais e comunicados oficiais.</p>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ==========================================
+    // 1. MOTOR 3D INTEGRADO NO WIDGET DO APP
+    // ==========================================
+    const radarContainer = document.getElementById('radar-3d');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(45, radarContainer.clientWidth / radarContainer.clientHeight, 0.1, 100);
+    camera.position.set(0, 0, 5.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(radarContainer.clientWidth, radarContainer.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    radarContainer.appendChild(renderer.domElement);
+
+    // Controlos orbitais (zoom desativado para não bloquear o scroll da página)
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.enableZoom = false;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.8;
+
+    // Luzes
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const mainLight = new THREE.PointLight(0x6366f1, 4, 20);
+    mainLight.position.set(4, 4, 4);
+    scene.add(mainLight);
+
+    const secondLight = new THREE.PointLight(0x38bdf8, 3, 20);
+    secondLight.position.set(-4, -3, 3);
+    scene.add(secondLight);
+
+    // Núcleo Sólido Metálico + Gaiola Wireframe + Anéis de Radar
+    const radarGroup = new THREE.Group();
+    scene.add(radarGroup);
+
+    const coreGeo = new THREE.IcosahedronGeometry(1.15, 1);
+    const coreMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      metalness: 0.9,
+      roughness: 0.18
+    });
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    radarGroup.add(coreMesh);
+
+    const wireGeo = new THREE.IcosahedronGeometry(1.45, 1);
+    const wireMat = new THREE.MeshBasicMaterial({
+      color: 0x818cf8,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.55
+    });
+    const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+    radarGroup.add(wireMesh);
+
+    const ringGeo = new THREE.TorusGeometry(1.9, 0.02, 16, 100);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.6 });
+    const ring1 = new THREE.Mesh(ringGeo, ringMat);
+    ring1.rotation.x = Math.PI / 2.5;
+    radarGroup.add(ring1);
+
+    const ring2 = new THREE.Mesh(ringGeo, ringMat);
+    ring2.rotation.y = Math.PI / 3;
+    radarGroup.add(ring2);
+
+    // Função para mudar o estado visual do 3D conforme o resultado da notícia
+    function atualizarRadar3D(estado) {
+      const pill = document.getElementById('radar-status-pill');
+
+      if (estado === 'falso') {
+        mainLight.color.setHex(0xf43f5e);
+        secondLight.color.setHex(0xfb7185);
+        wireMat.color.setHex(0xf43f5e);
+        ringMat.color.setHex(0xf43f5e);
+        controls.autoRotateSpeed = 5.0; // Roda mais rápido em alerta!
+        pill.textContent = "● Alerta: Alto Risco";
+        pill.className = "rounded-lg border border-rose-400/30 bg-rose-500/20 px-2.5 py-1 text-[11px] font-bold text-rose-300 backdrop-blur-md";
+      } else if (estado === 'verdadeiro') {
+        mainLight.color.setHex(0x10b981);
+        secondLight.color.setHex(0x34d399);
+        wireMat.color.setHex(0x10b981);
+        ringMat.color.setHex(0x10b981);
+        controls.autoRotateSpeed = 1.4;
+        pill.textContent = "● Fonte Verificada";
+        pill.className = "rounded-lg border border-emerald-400/30 bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold text-emerald-300 backdrop-blur-md";
+      } else {
+        mainLight.color.setHex(0xf59e0b);
+        secondLight.color.setHex(0xfbbf24);
+        wireMat.color.setHex(0xf59e0b);
+        ringMat.color.setHex(0xf59e0b);
+        controls.autoRotateSpeed = 2.5;
+        pill.textContent = "● Requer Atenção";
+        pill.className = "rounded-lg border border-amber-400/30 bg-amber-500/20 px-2.5 py-1 text-[11px] font-bold text-amber-300 backdrop-blur-md";
+      }
+    }
+
+    // Loop de Animação 3D
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+
+      radarGroup.position.y = Math.sin(t * 1.5) * 0.1;
+      ring1.rotation.z = t * 0.4;
+      ring2.rotation.x = t * 0.3;
+      wireMesh.rotation.y = -t * 0.15;
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Responsividade do contentor 3D
+    window.addEventListener('resize', () => {
+      camera.aspect = radarContainer.clientWidth / radarContainer.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(radarContainer.clientWidth, radarContainer.clientHeight);
+    });
+
+    // ==========================================
+    // 2. LÓGICA DO VERIFICADOR DE NOTÍCIAS
+    // ==========================================
+    function switchTab(tipo) {
+      const input = document.getElementById('input-conteudo');
+      const tabTexto = document.getElementById('tab-texto');
+      const tabUrl = document.getElementById('tab-url');
+
+      if (tipo === 'url') {
+        input.placeholder = "Cole o link completo (ex: https://exemplo.com/noticia)...";
+        tabUrl.className = "rounded-lg bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white transition";
+        tabTexto.className = "rounded-lg px-3.5 py-1.5 text-xs font-semibold text-slate-400 transition hover:text-white";
+      } else {
+        input.placeholder = "Teste escrevendo algo com a palavra 'urgente' ou 'oficial'...";
+        tabTexto.className = "rounded-lg bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white transition";
+        tabUrl.className = "rounded-lg px-3.5 py-1.5 text-xs font-semibold text-slate-400 transition hover:text-white";
+      }
+    }
+
+    function simularAnalise() {
+      const texto = document.getElementById('input-conteudo').value.trim();
+      if (!texto) {
+        alert("Escreva uma frase ou cole um link para ver o 3D reagir!");
+        return;
+      }
+
+      const lower = texto.toLowerCase();
+      const titulo = document.getElementById('res-titulo');
+      const badge = document.getElementById('res-badge');
+      const scoreText = document.getElementById('res-score-text');
+      const scoreBar = document.getElementById('res-score-bar');
+      const tom = document.getElementById('res-tom');
+      const fontes = document.getElementById('res-fontes');
+      const match = document.getElementById('res-match');
+
+      titulo.textContent = "Análise: " + (texto.length > 70 ? texto.slice(0, 70) + "..." : texto);
+
+      if (lower.includes("urgente") || lower.includes("compartilhe") || lower.includes("fechar")) {
+        atualizarRadar3D('falso');
+        badge.textContent = "Alto Risco / Enganoso";
+        badge.className = "inline-flex w-fit items-center rounded-full border border-rose-500/30 bg-rose-500/15 px-3.5 py-1 text-xs font-bold text-rose-400";
+        scoreText.textContent = "15%";
+        scoreText.className = "font-bold text-rose-400";
+        scoreBar.style.width = "15%";
+        scoreBar.className = "h-full rounded-full bg-rose-500 transition-all duration-700";
+        tom.textContent = "Alarmista / Sensacionalista";
+        tom.className = "mt-1 text-sm font-semibold text-rose-400";
+        fontes.textContent = "Nenhuma fonte citada";
+        fontes.className = "mt-1 text-sm font-semibold text-rose-400";
+        match.textContent = "Padrão típico de boato viral";
+      } else if (lower.includes("oficial") || lower.includes("relatório") || lower.includes("http")) {
+        atualizarRadar3D('verdadeiro');
+        badge.textContent = "Alta Confiabilidade";
+        badge.className = "inline-flex w-fit items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3.5 py-1 text-xs font-bold text-emerald-400";
+        scoreText.textContent = "92%";
+        scoreText.className = "font-bold text-emerald-400";
+        scoreBar.style.width = "92%";
+        scoreBar.className = "h-full rounded-full bg-emerald-500 transition-all duration-700";
+        tom.textContent = "Informativo / Neutro";
+        tom.className = "mt-1 text-sm font-semibold text-emerald-400";
+        fontes.textContent = "Fontes verificadas";
+        fontes.className = "mt-1 text-sm font-semibold text-emerald-400";
+        match.textContent = "Consistente com registos públicos";
+      } else {
+        atualizarRadar3D('aviso');
+        badge.textContent = "Requer Verificação";
+        badge.className = "inline-flex w-fit items-center rounded-full border border-amber-500/30 bg-amber-500/15 px-3.5 py-1 text-xs font-bold text-amber-400";
+        scoreText.textContent = "54%";
+        scoreText.className = "font-bold text-amber-400";
+        scoreBar.style.width = "54%";
+        scoreBar.className = "h-full rounded-full bg-amber-500 transition-all duration-700";
+        tom.textContent = "Ambíguo";
+        tom.className = "mt-1 text-sm font-semibold text-amber-400";
+        fontes.textContent = "Contexto incompleto";
+        fontes.className = "mt-1 text-sm font-semibold text-amber-400";
+        match.textContent = "Sem correspondência exata";
+      }
+    }
+  </script>
+</body>
+</html>
