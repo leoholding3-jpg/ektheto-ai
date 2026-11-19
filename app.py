@@ -326,14 +326,16 @@ def localized_analysis_error(text: dict[str, str], error_key: str) -> str:
 
 
 def get_sightengine_credentials() -> tuple[str, str]:
-    """Read Streamlit Cloud secrets first, then local environment/.env values."""
+    """Read environment/.env values first, then fall back to Streamlit secrets."""
     def read_credential(name: str) -> str:
+        value = os.getenv(name, "")
+        if value is not None and str(value).strip():
+            return str(value).strip()
+
         try:
             value = st.secrets.get(name)
         except Exception:
             value = None
-        if value is None or not str(value).strip():
-            value = os.getenv(name, "")
         return str(value or "").strip()
 
     return (

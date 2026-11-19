@@ -176,33 +176,39 @@ class TestLocalizedAnalysisErrors(unittest.TestCase):
 
 
 class TestSightengineCredentials(unittest.TestCase):
-    def test_prefers_streamlit_cloud_secrets_and_trims_whitespace(self) -> None:
+    def test_prefers_environment_credentials_and_trims_whitespace(self) -> None:
         with patch(
             "app.st.secrets",
             {
-                "SIGHTENGINE_USER": " cloud-user ",
-                "SIGHTENGINE_SECRET": " cloud-secret ",
+                "SIGHTENGINE_USER": "stale-cloud-user",
+                "SIGHTENGINE_SECRET": "stale-cloud-secret",
             },
         ), patch(
             "app.os.getenv",
-            side_effect=lambda name, default="": f"local-{name}",
-        ):
-            self.assertEqual(
-                get_sightengine_credentials(),
-                ("cloud-user", "cloud-secret"),
-            )
-
-    def test_uses_local_environment_when_a_cloud_secret_is_missing(self) -> None:
-        with patch("app.st.secrets", {"SIGHTENGINE_USER": "cloud-user"}), patch(
-            "app.os.getenv",
             side_effect=lambda name, default="": {
-                "SIGHTENGINE_USER": "local-user",
+                "SIGHTENGINE_USER": " local-user ",
                 "SIGHTENGINE_SECRET": " local-secret ",
             }.get(name, default),
         ):
             self.assertEqual(
                 get_sightengine_credentials(),
-                ("cloud-user", "local-secret"),
+                ("local-user", "local-secret"),
+            )
+
+    def test_falls_back_to_streamlit_cloud_secrets_when_environment_is_missing(self) -> None:
+        with patch(
+            "app.st.secrets",
+            {
+                "SIGHTENGINE_USER": "cloud-user",
+                "SIGHTENGINE_SECRET": "cloud-secret",
+            },
+        ), patch(
+            "app.os.getenv",
+            side_effect=lambda name, default="": default,
+        ):
+            self.assertEqual(
+                get_sightengine_credentials(),
+                ("cloud-user", "cloud-secret"),
             )
 
 
