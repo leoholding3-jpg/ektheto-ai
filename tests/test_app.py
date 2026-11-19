@@ -14,6 +14,7 @@ from app import (
     localized_analysis_error,
     parse_generator_scores,
     parse_ai_generated_score,
+    parse_deepfake_score,
     validate_image_bytes,
     TEXT,
 )
@@ -224,6 +225,7 @@ class TestSightengineRequest(unittest.TestCase):
             "status": "success",
             "type": {
                 "ai_generated": 0.42,
+                "deepfake": 0.13,
                 "ai_generators": {"gpt": 0.81, "dalle": 0.64, "invalid": float("nan")},
             },
         }
@@ -231,12 +233,32 @@ class TestSightengineRequest(unittest.TestCase):
             result = analyze_image(self.image, "test-user", "test-secret")
 
         self.assertEqual(result.score, 0.42)
+        self.assertEqual(result.deepfake_score, 0.13)
         self.assertEqual(result.generator_scores, (("gpt", 0.81), ("dalle", 0.64)))
         kwargs = post.call_args.kwargs
+        self.assertEqual(kwargs["data"]["models"], "genai,deepfake")
         self.assertEqual(kwargs["data"]["api_user"], "test-user")
         self.assertEqual(kwargs["data"]["api_secret"], "test-secret")
         self.assertEqual(kwargs["files"]["media"][2], "image/png")
         self.assertEqual(kwargs["timeout"], 30)
+
+    def test_falls_back_to_genai_when_deepfake_model_is_rejected(self) -> None:
+        rejected = MagicMock(status_code=400)
+        successful = MagicMock(status_code=200)
+        successful.json.return_value = {
+            "status": "success",
+            "type": {"ai_generated": 0.18},
+        }
+        with patch(
+            "app.requests.post", side_effect=[rejected, successful]
+        ) as post:
+            result = analyze_image(self.image, "test-user", "test-secret")
+
+        self.assertEqual(result.score, 0.18)
+        self.assertIsNone(result.deepfake_score)
+        self.assertEqual(post.call_count, 2)
+        self.assertEqual(post.call_args_list[0].kwargs["data"]["models"], "genai,deepfake")
+        self.assertEqual(post.call_args_list[1].kwargs["data"]["models"], "genai")
 
     def test_generator_scores_are_optional_and_sorted(self) -> None:
         payload = {"status": "success", "type": {"ai_generated": 0.62}}
@@ -246,6 +268,18 @@ class TestSightengineRequest(unittest.TestCase):
             parse_generator_scores(payload),
             (("model-a", 0.9), ("model-b", 0.4)),
         )
+
+    def test_deepfake_score_is_optional_and_validated(self) -> None:
+        self.assertIsNone(parse_deepfake_score({"status": "success", "type": {}}))
+        self.assertEqual(
+            parse_deepfake_score({"status": "success", "type": {"deepfake": 0.13}}),
+            0.13,
+        )
+        for invalid_score in (True, "0.2", -0.01, 1.01, float("nan")):
+            with self.subTest(score=invalid_score), self.assertRaises(ValueError):
+                parse_deepfake_score(
+                    {"status": "success", "type": {"deepfake": invalid_score}}
+                )
 
     def test_maps_provider_status_codes_to_safe_errors(self) -> None:
         cases = {
@@ -445,7 +479,7 @@ class TestStreamlitInterface(unittest.TestCase):
         response = MagicMock(status_code=200)
         response.json.return_value = {
             "status": "success",
-            "type": {"ai_generated": 0.42},
+            "type": {"ai_generated": 0.42, "deepfake": 0.12},
         }
         real_getenv = os.getenv
 
@@ -472,6 +506,7 @@ class TestStreamlitInterface(unittest.TestCase):
             history = app_test.session_state["analysis_history"]
             self.assertEqual(len(history), 1)
             self.assertEqual(history[0]["score"], 0.42)
+            self.assertEqual(history[0]["deepfake_score"], 0.12)
             self.assertNotIn("image", history[0])
             self.assertEqual(len(app_test.get("dataframe")), 1)
             post.assert_called_once()

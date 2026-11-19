@@ -77,29 +77,28 @@ TEXT: dict[str, dict[str, str]] = {
         "provider_rate_limit": "O limite de pedidos do serviço foi atingido. Tenta mais tarde.",
         "invalid_response": "O serviço devolveu uma resposta inválida.",
         "result": "Resultado da análise",
-        "score": "Confiança do modelo Sightengine",
-        "score_help": "A classificação apresentada usa 80% ou mais como confiança elevada, 20% ou menos como baixa e valores intermédios como inconclusivos. O modelo avalia píxeis, mas não indica quais partes visuais motivaram a pontuação.",
-        "high": "Confiança elevada do modelo",
-        "high_detail": (
-            "O Sightengine atribuiu {score} de confiança de geração ou edição por modelo generativo, "
-            "com base nos píxeis. A API não aponta características visuais específicas que expliquem "
-            "este valor; não é prova da origem da imagem."
-        ),
-        "low": "Confiança baixa do modelo",
-        "low_detail": (
-            "O Sightengine atribuiu {score}. Um valor baixo não confirma que a imagem seja autêntica "
-            "ou não tenha sido editada."
-        ),
-        "inconclusive": "Resultado inconclusivo",
-        "inconclusive_detail": (
-            "A confiança do modelo está no intervalo intermédio. Confirma a origem da imagem por outras fontes."
-        ),
-        "generator_detail": "Maior correspondência por gerador (confiança do modelo; não indica uma região visual):",
-        "no_generator_detail": "O serviço devolveu apenas a pontuação global; não forneceu detalhe por gerador ou região visual.",
-        "disclaimer": (
-            "O Sightengine avalia os píxeis e devolve uma pontuação de confiança. Pode haver falsos positivos e negativos; "
-            "o valor não identifica por si só a origem nem prova autenticidade."
-        ),
+        "score": "Geração por IA (modelo genai)",
+        "score_help": "O modelo usa 80% ou mais como sinais elevados, 20% ou menos como baixos e valores intermédios como inconclusivos. Avalia se a imagem inteira foi gerada por IA; não deteta rostos trocados.",
+        "high": "Sinais elevados de geração por IA",
+        "high_detail": "O modelo genai atribuiu {score} de confiança a conteúdo gerado por IA. A pontuação não prova a origem da imagem.",
+        "low": "Poucos sinais de geração por IA",
+        "low_detail": "O modelo genai atribuiu {score}, indicando poucos sinais de geração integral por IA. Isto não comprova que a imagem seja autêntica.",
+        "inconclusive": "Sinais de geração inconclusivos",
+        "inconclusive_detail": "A pontuação está no intervalo intermédio. Confirma a origem da imagem por outras fontes.",
+        "generator_detail": "Correspondências por gerador (confiança do modelo):",
+        "no_generator_detail": "O Sightengine não devolveu detalhe por gerador.",
+        "deepfake_heading": "Manipulação facial (deepfake)",
+        "deepfake_score": "Confiança de manipulação facial",
+        "deepfake_score_help": "O modelo usa 80% ou mais como sinais elevados, 20% ou menos como baixos e valores intermédios como inconclusivos. Procura rostos trocados ou alterados; não deteta imagens totalmente geradas por IA.",
+        "deepfake_high": "Sinais elevados de manipulação facial",
+        "deepfake_high_detail": "O modelo deepfake atribuiu {score} de confiança a uma possível troca ou alteração de rosto. Confirma a imagem com outras fontes.",
+        "deepfake_low": "Poucos sinais de manipulação facial",
+        "deepfake_low_detail": "O modelo deepfake atribuiu {score}, indicando poucos sinais de troca ou alteração de rosto. Isto não prova que a fotografia seja autêntica.",
+        "deepfake_inconclusive": "Sinais de manipulação facial inconclusivos",
+        "deepfake_inconclusive_detail": "A pontuação está no intervalo intermédio. Confirma a origem da imagem por outras fontes.",
+        "deepfake_unavailable": "A API não devolveu a pontuação do modelo de manipulação facial. Confirma se o modelo deepfake está ativo na tua conta Sightengine.",
+        "history_deepfake_score": "Manipulação facial",
+        "disclaimer": "As pontuações são estimativas dos modelos e podem conter falsos positivos ou negativos. Não provam autenticidade nem identificam, por si só, a origem da imagem.",
         "history_notice": (
             "O histórico contém apenas a hora e o resultado, nunca a imagem. "
             "É apagado quando a sessão termina."
@@ -108,7 +107,7 @@ TEXT: dict[str, dict[str, str]] = {
         "clear_history": "Limpar histórico da sessão",
         "history_cleared": "Histórico da sessão apagado.",
         "time": "Hora",
-        "history_score": "Confiança Sightengine",
+        "history_score": "Geração por IA",
         "history_result": "Resultado",
         "version": "Detector de imagens · análise privada por sessão",
     },
@@ -152,27 +151,28 @@ TEXT: dict[str, dict[str, str]] = {
         "provider_rate_limit": "The service request limit was reached. Try again later.",
         "invalid_response": "The service returned an invalid response.",
         "result": "Analysis result",
-        "score": "Sightengine model confidence",
-        "score_help": "This display uses 80% or higher as high confidence, 20% or lower as low, and intermediate scores as inconclusive. The model evaluates pixels but does not identify the visual areas behind its score.",
-        "high": "High model confidence",
-        "high_detail": (
-            "Sightengine assigned {score} confidence that the image was generated or edited by a generative model, "
-            "based on its pixels. The API does not identify specific visual features behind this value; it is not proof of origin."
-        ),
-        "low": "Low model confidence",
-        "low_detail": (
-            "Sightengine assigned {score}. A low value does not confirm that the image is authentic or unedited."
-        ),
-        "inconclusive": "Inconclusive result",
-        "inconclusive_detail": (
-            "Model confidence is in the intermediate range. Check the image's origin using other sources."
-        ),
-        "generator_detail": "Top generator matches (model confidence; not a visual-region explanation):",
-        "no_generator_detail": "The service returned only an overall score; it provided no generator or visual-region details.",
-        "disclaimer": (
-            "Sightengine evaluates pixels and returns a confidence score. False positives and negatives are possible; "
-            "the score alone does not identify origin or prove authenticity."
-        ),
+        "score": "AI generation (genai model)",
+        "score_help": "Scores of 80% or higher are high, 20% or lower are low, and intermediate values are inconclusive. This model estimates whether the entire image was AI-generated; it does not detect swapped faces.",
+        "high": "Strong signs of AI generation",
+        "high_detail": "The genai model assigned {score} confidence to AI-generated content. This score does not prove the image's origin.",
+        "low": "Few signs of AI generation",
+        "low_detail": "The genai model assigned {score}, indicating few signs of full-image AI generation. This does not prove the image is authentic.",
+        "inconclusive": "Inconclusive AI-generation signals",
+        "inconclusive_detail": "The score is in the intermediate range. Check the image's origin using other sources.",
+        "generator_detail": "Generator matches (model confidence):",
+        "no_generator_detail": "Sightengine did not return generator details.",
+        "deepfake_heading": "Face manipulation (deepfake)",
+        "deepfake_score": "Face-manipulation confidence",
+        "deepfake_score_help": "Scores of 80% or higher are high, 20% or lower are low, and intermediate values are inconclusive. This model checks for swapped or altered faces; it does not detect fully AI-generated images.",
+        "deepfake_high": "Strong signs of face manipulation",
+        "deepfake_high_detail": "The deepfake model assigned {score} confidence to a possible face swap or alteration. Check the image against other sources.",
+        "deepfake_low": "Few signs of face manipulation",
+        "deepfake_low_detail": "The deepfake model assigned {score}, indicating few signs of a face swap or alteration. This does not prove the photograph is authentic.",
+        "deepfake_inconclusive": "Inconclusive face-manipulation signals",
+        "deepfake_inconclusive_detail": "The score is in the intermediate range. Check the image's origin using other sources.",
+        "deepfake_unavailable": "The API did not return a face-manipulation score. Check whether the deepfake model is enabled for your Sightengine account.",
+        "history_deepfake_score": "Face manipulation",
+        "disclaimer": "Model scores are estimates and may contain false positives or negatives. They do not prove authenticity or identify the image's origin on their own.",
         "history_notice": (
             "History stores only the time and result, never the image. "
             "It is cleared when the session ends."
@@ -181,7 +181,7 @@ TEXT: dict[str, dict[str, str]] = {
         "clear_history": "Clear session history",
         "history_cleared": "Session history cleared.",
         "time": "Time",
-        "history_score": "Sightengine confidence",
+        "history_score": "AI generation",
         "history_result": "Result",
         "version": "Image detector · private session analysis",
     },
@@ -225,27 +225,28 @@ TEXT: dict[str, dict[str, str]] = {
         "provider_rate_limit": "Se alcanzó el límite de solicitudes. Inténtalo más tarde.",
         "invalid_response": "El servicio devolvió una respuesta no válida.",
         "result": "Resultado del análisis",
-        "score": "Confianza del modelo Sightengine",
-        "score_help": "La clasificación usa 80% o más como confianza alta, 20% o menos como baja y los valores intermedios como no concluyentes. El modelo evalúa píxeles, pero no señala las zonas visuales que motivaron la puntuación.",
-        "high": "Confianza alta del modelo",
-        "high_detail": (
-            "Sightengine asignó {score} de confianza de generación o edición por un modelo generativo, "
-            "basada en los píxeles. La API no señala características visuales concretas que expliquen este valor; no prueba el origen."
-        ),
-        "low": "Confianza baja del modelo",
-        "low_detail": (
-            "Sightengine asignó {score}. Un valor bajo no confirma que la imagen sea auténtica o no haya sido editada."
-        ),
-        "inconclusive": "Resultado no concluyente",
-        "inconclusive_detail": (
-            "La confianza del modelo está en el intervalo intermedio. Comprueba el origen de la imagen con otras fuentes."
-        ),
-        "generator_detail": "Mayores coincidencias por generador (confianza del modelo; no indica una región visual):",
-        "no_generator_detail": "El servicio solo devolvió la puntuación global; no dio detalles por generador ni región visual.",
-        "disclaimer": (
-            "Sightengine evalúa los píxeles y devuelve una puntuación de confianza. Puede haber falsos positivos y negativos; "
-            "el valor no identifica por sí solo el origen ni prueba autenticidad."
-        ),
+        "score": "Generación por IA (modelo genai)",
+        "score_help": "El modelo usa un 80% o más como señales altas, un 20% o menos como bajas y los valores intermedios como no concluyentes. Evalúa si toda la imagen fue generada por IA; no detecta rostros intercambiados.",
+        "high": "Señales altas de generación por IA",
+        "high_detail": "El modelo genai asignó {score} de confianza a contenido generado por IA. La puntuación no demuestra el origen de la imagen.",
+        "low": "Pocas señales de generación por IA",
+        "low_detail": "El modelo genai asignó {score}, lo que indica pocas señales de generación integral por IA. Esto no demuestra que la imagen sea auténtica.",
+        "inconclusive": "Señales de generación no concluyentes",
+        "inconclusive_detail": "La puntuación está en el intervalo intermedio. Comprueba el origen de la imagen con otras fuentes.",
+        "generator_detail": "Coincidencias por generador (confianza del modelo):",
+        "no_generator_detail": "Sightengine no devolvió detalles por generador.",
+        "deepfake_heading": "Manipulación facial (deepfake)",
+        "deepfake_score": "Confianza de manipulación facial",
+        "deepfake_score_help": "El modelo usa un 80% o más como señales altas, un 20% o menos como bajas y los valores intermedios como no concluyentes. Busca rostros intercambiados o alterados; no detecta imágenes totalmente generadas por IA.",
+        "deepfake_high": "Señales altas de manipulación facial",
+        "deepfake_high_detail": "El modelo deepfake asignó {score} de confianza a un posible intercambio o alteración de rostro. Comprueba la imagen con otras fuentes.",
+        "deepfake_low": "Pocas señales de manipulación facial",
+        "deepfake_low_detail": "El modelo deepfake asignó {score}, lo que indica pocas señales de intercambio o alteración de rostro. Esto no demuestra que la fotografía sea auténtica.",
+        "deepfake_inconclusive": "Señales de manipulación facial no concluyentes",
+        "deepfake_inconclusive_detail": "La puntuación está en el intervalo intermedio. Comprueba el origen de la imagen con otras fuentes.",
+        "deepfake_unavailable": "La API no devolvió la puntuación del modelo de manipulación facial. Comprueba si el modelo deepfake está activo en tu cuenta de Sightengine.",
+        "history_deepfake_score": "Manipulación facial",
+        "disclaimer": "Las puntuaciones son estimaciones de los modelos y pueden contener falsos positivos o negativos. Por sí solas, no demuestran autenticidad ni identifican el origen de la imagen.",
         "history_notice": (
             "El historial solo guarda la hora y el resultado, nunca la imagen. "
             "Se borra al terminar la sesión."
@@ -254,7 +255,7 @@ TEXT: dict[str, dict[str, str]] = {
         "clear_history": "Borrar historial de sesión",
         "history_cleared": "Historial de sesión borrado.",
         "time": "Hora",
-        "history_score": "Confianza Sightengine",
+        "history_score": "Generación por IA",
         "history_result": "Resultado",
         "version": "Detector de imágenes · análisis privado por sesión",
     },
@@ -313,10 +314,28 @@ def parse_ai_generated_score(payload: Any) -> float:
     return float(score)
 
 
+def parse_deepfake_score(payload: Any) -> float | None:
+    """Return the optional face-manipulation score from Sightengine."""
+    if not isinstance(payload, dict) or not isinstance(payload.get("type"), dict):
+        return None
+    score = payload["type"].get("deepfake")
+    if score is None:
+        return None
+    if (
+        isinstance(score, bool)
+        or not isinstance(score, (int, float))
+        or not math.isfinite(score)
+        or not 0 <= score <= 1
+    ):
+        raise ValueError("score")
+    return float(score)
+
+
 @dataclass(frozen=True)
 class ImageAnalysis:
     score: float
     generator_scores: tuple[tuple[str, float], ...] = ()
+    deepfake_score: float | None = None
 
 
 def parse_generator_scores(payload: Any) -> tuple[tuple[str, float], ...]:
@@ -378,21 +397,30 @@ def get_sightengine_credentials() -> tuple[str, str]:
 
 def analyze_image(image_bytes: bytes, api_user: str, api_secret: str) -> ImageAnalysis:
     content_type = validate_image_bytes(image_bytes)
-    try:
-        response = requests.post(
-            API_URL,
-            data={
-                "models": "genai",
-                "api_user": api_user,
-                "api_secret": api_secret,
-            },
-            files={"media": ("upload", image_bytes, content_type)},
-            timeout=REQUEST_TIMEOUT,
-        )
-    except requests.Timeout as exc:
-        raise AnalysisError("timeout") from exc
-    except requests.RequestException as exc:
-        raise AnalysisError("network") from exc
+    def send_request(models: str) -> requests.Response:
+        try:
+            return requests.post(
+                API_URL,
+                data={
+                    "models": models,
+                    "api_user": api_user,
+                    "api_secret": api_secret,
+                },
+                files={"media": ("upload", image_bytes, content_type)},
+                timeout=REQUEST_TIMEOUT,
+            )
+        except requests.Timeout as exc:
+            raise AnalysisError("timeout") from exc
+        except requests.RequestException as exc:
+            raise AnalysisError("network") from exc
+
+    response = send_request("genai,deepfake")
+    deepfake_requested = True
+    if response.status_code in {400, 403}:
+        # Keep image-generation analysis available when the account cannot use
+        # the optional face-manipulation model.
+        response = send_request("genai")
+        deepfake_requested = False
 
     if response.status_code in {401, 403}:
         raise AnalysisError("credentials")
@@ -412,6 +440,9 @@ def analyze_image(image_bytes: bytes, api_user: str, api_secret: str) -> ImageAn
         return ImageAnalysis(
             score=parse_ai_generated_score(payload),
             generator_scores=parse_generator_scores(payload),
+            deepfake_score=(
+                parse_deepfake_score(payload) if deepfake_requested else None
+            ),
         )
     except ValueError as exc:
         raise AnalysisError("invalid_response") from exc
@@ -704,10 +735,18 @@ def main() -> None:
                     else:
                         score = analysis.score
                         verdict = classify_score(score)
+                        deepfake_score = analysis.deepfake_score
+                        deepfake_verdict = (
+                            classify_score(deepfake_score)
+                            if deepfake_score is not None
+                            else None
+                        )
                         st.session_state.current_analysis = {
                             "score": score,
                             "verdict": verdict,
                             "generator_scores": analysis.generator_scores,
+                            "deepfake_score": deepfake_score,
+                            "deepfake_verdict": deepfake_verdict,
                         }
                         st.session_state.analysis_history.insert(
                             0,
@@ -715,6 +754,8 @@ def main() -> None:
                                 "time": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M"),
                                 "score": score,
                                 "verdict": verdict,
+                                "deepfake_score": deepfake_score,
+                                "deepfake_verdict": deepfake_verdict,
                             },
                         )
 
@@ -744,6 +785,27 @@ def main() -> None:
                     st.info(f'{text["low"]}. {detail_message}')
                 else:
                     st.warning(f'{text["inconclusive"]}. {detail_message}')
+
+                st.divider()
+                st.markdown(f'#### {text["deepfake_heading"]}')
+                deepfake_score = current_analysis.get("deepfake_score")
+                deepfake_verdict = current_analysis.get("deepfake_verdict")
+                if deepfake_score is None:
+                    st.warning(text["deepfake_unavailable"])
+                else:
+                    st.metric(text["deepfake_score"], f"{deepfake_score:.1%}")
+                    st.caption(text["deepfake_score_help"])
+                    deepfake_detail = text[f"deepfake_{deepfake_verdict}_detail"].format(
+                        score=f"{deepfake_score:.1%}"
+                    )
+                    if deepfake_verdict == "high":
+                        st.warning(f'{text["deepfake_high"]}. {deepfake_detail}')
+                    elif deepfake_verdict == "low":
+                        st.info(f'{text["deepfake_low"]}. {deepfake_detail}')
+                    else:
+                        st.warning(
+                            f'{text["deepfake_inconclusive"]}. {deepfake_detail}'
+                        )
                 st.caption(text["disclaimer"])
 
     with news_tab:
@@ -761,6 +823,11 @@ def main() -> None:
                 {
                     text["time"]: item["time"],
                     text["history_score"]: f'{item["score"]:.1%}',
+                    text["history_deepfake_score"]: (
+                        f'{item["deepfake_score"]:.1%}'
+                        if item.get("deepfake_score") is not None
+                        else "—"
+                    ),
                     text["history_result"]: text[item["verdict"]],
                 }
                 for item in st.session_state.analysis_history
