@@ -1,6 +1,0 @@
-{
-  "name": "Ektheto",
-  "description": "Ektheto - Authenticity Verification. Verify links, text, rumors, images, videos, and audio using real public sources.",
-  "requestFramePermissions": ["camera", "microphone", "geolocation"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

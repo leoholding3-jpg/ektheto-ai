@@ -3,3 +3,4 @@ truststore
 requests
 streamlit
 pillow
+playwright>=1.65,<2

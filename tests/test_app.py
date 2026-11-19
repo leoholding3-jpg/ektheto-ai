@@ -297,6 +297,22 @@ class TestStreamlitInterface(unittest.TestCase):
         )
         self.assertTrue(app_test.button[0].disabled)
 
+    def test_premium_styles_are_injected_into_the_rendered_app(self) -> None:
+        app_test = AppTest.from_file(str(self.app_path)).run()
+        injected_styles = "\n".join(
+            str(getattr(element, "value", "")) for element in app_test.markdown
+        )
+        for expected_style in (
+            "--ekt-navy: #0a1128",
+            "--ekt-gradient",
+            "[data-testid=\"stButton\"] > button",
+            "[data-testid=\"stFileUploadDropzone\"]",
+            "[data-testid=\"stAlert\"]",
+            "font-family: 'Inter', sans-serif",
+        ):
+            with self.subTest(expected_style=expected_style):
+                self.assertIn(expected_style, injected_styles)
+
     def test_uploader_advertises_all_requested_extensions(self) -> None:
         app_test = AppTest.from_file(str(self.app_path)).run()
         self.assertEqual(len(app_test.exception), 0)

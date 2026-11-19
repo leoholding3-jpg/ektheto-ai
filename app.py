@@ -46,13 +46,13 @@ TEXT: dict[str, dict[str, str]] = {
         "language": "Idioma",
         "analysis_tab": "Analisar imagem",
         "history_tab": "Histórico da sessão",
-        "upload": "Seleciona uma imagem (JPEG ou PNG)",
+        "upload": "Seleciona uma imagem (JPG, PNG, WEBP ou BMP)",
         "analyze": "Analisar imagem",
         "missing_credentials": (
             "A análise não está configurada. Define SIGHTENGINE_USER e "
             "SIGHTENGINE_SECRET no ambiente ou no ficheiro .env."
         ),
-        "invalid_image": "Não foi possível validar a imagem. Carrega um JPEG ou PNG válido.",
+        "invalid_image": "Não foi possível validar a imagem. Carrega um JPG, PNG, WEBP ou BMP válido.",
         "large_image": "A imagem excede o limite de 10 MB.",
         "large_dimensions": "A imagem excede o limite de resolução permitido.",
         "analysis_error": "Não foi possível concluir a análise.",
@@ -106,13 +106,13 @@ TEXT: dict[str, dict[str, str]] = {
         "language": "Language",
         "analysis_tab": "Analyze image",
         "history_tab": "Session history",
-        "upload": "Choose an image (JPEG or PNG)",
+        "upload": "Choose an image (JPG, PNG, WEBP, or BMP)",
         "analyze": "Analyze image",
         "missing_credentials": (
             "Analysis is not configured. Set SIGHTENGINE_USER and "
             "SIGHTENGINE_SECRET in the environment or .env file."
         ),
-        "invalid_image": "The image could not be validated. Upload a valid JPEG or PNG.",
+        "invalid_image": "The image could not be validated. Upload a valid JPG, PNG, WEBP, or BMP.",
         "large_image": "The image exceeds the 10 MB limit.",
         "large_dimensions": "The image exceeds the allowed resolution limit.",
         "analysis_error": "The analysis could not be completed.",
@@ -166,13 +166,13 @@ TEXT: dict[str, dict[str, str]] = {
         "language": "Idioma",
         "analysis_tab": "Analizar imagen",
         "history_tab": "Historial de sesión",
-        "upload": "Selecciona una imagen (JPEG o PNG)",
+        "upload": "Selecciona una imagen (JPG, PNG, WEBP o BMP)",
         "analyze": "Analizar imagen",
         "missing_credentials": (
             "El análisis no está configurado. Define SIGHTENGINE_USER y "
             "SIGHTENGINE_SECRET en el entorno o en el archivo .env."
         ),
-        "invalid_image": "No se pudo validar la imagen. Carga un JPEG o PNG válido.",
+        "invalid_image": "No se pudo validar la imagen. Carga un JPG, PNG, WEBP o BMP válido.",
         "large_image": "La imagen supera el límite de 10 MB.",
         "large_dimensions": "La imagen supera el límite de resolución permitido.",
         "analysis_error": "No se pudo completar el análisis.",
@@ -334,10 +334,38 @@ def main() -> None:
     st.markdown(
         """
         <style>
-        .stApp, [data-testid="stHeader"], [data-testid="stSidebar"],
-        [data-testid="stAppViewContainer"] {
-            background-color: #0a1128;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --ekt-navy: #0a1128;
+            --ekt-card: #111b3d;
+            --ekt-cyan: #00d2ff;
+            --ekt-blue: #3a7bd5;
+            --ekt-gradient: linear-gradient(110deg, var(--ekt-cyan), var(--ekt-blue));
+        }
+        html, body, .stApp, [class*="css"], button, input, textarea, select {
+            font-family: 'Inter', sans-serif;
+        }
+        html, body, .stApp, [data-testid="stAppViewContainer"],
+        [data-testid="stMain"], [data-testid="stSidebar"] {
+            background: var(--ekt-navy) !important;
             color: #ffffff;
+        }
+        #MainMenu, footer, [data-testid="stToolbar"],
+        [data-testid="stDecoration"], [data-testid="stDeployButton"],
+        [data-testid="stStatusWidget"] {
+            display: none !important;
+        }
+        [data-testid="stHeader"] {
+            background: rgba(10, 17, 40, 0.92) !important;
+        }
+        [data-testid="stMainBlockContainer"] {
+            max-width: 780px;
+        }
+        .block-container {
+            width: min(100% - 2rem, 780px);
+            padding-top: clamp(1.25rem, 4vw, 2.75rem);
+            padding-bottom: 3rem;
         }
         [data-testid="stMarkdownContainer"], [data-testid="stMarkdownContainer"] p,
         [data-testid="stMarkdownContainer"] h1, [data-testid="stMarkdownContainer"] h2,
@@ -345,25 +373,96 @@ def main() -> None:
         [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
             color: #ffffff;
         }
-        [data-testid="stFileUploader"] section {
+        [data-testid="stFileUploaderDropzone"],
+        [data-testid="stFileUploader"] section,
+        [data-testid="stFileUploadDropzone"] {
+            border: 1.5px dashed transparent;
+            border-radius: 14px;
+            background: linear-gradient(var(--ekt-card), var(--ekt-card)) padding-box,
+                        var(--ekt-gradient) border-box;
             color: #ffffff;
-            border-color: #52617a;
-            background-color: #111b35;
+            transition: background-color 160ms ease, transform 160ms ease;
         }
-        div.stButton > button {
+        [data-testid="stFileUploaderDropzone"]:hover,
+        [data-testid="stFileUploader"] section:hover,
+        [data-testid="stFileUploadDropzone"]:hover {
+            background: linear-gradient(#16244d, #16244d) padding-box,
+                        var(--ekt-gradient) border-box;
+        }
+        [data-testid="stFileUploaderDropzone"],
+        [data-testid="stFileUploadDropzone"] {
+            color: #ffffff;
+        }
+        [data-testid="stFileUploader"] small,
+        [data-testid="stFileUploader"] label,
+        [data-testid="stFileUploader"] button {
+            color: #dbeafe !important;
+        }
+        div.stButton > button,
+        [data-testid="stButton"] > button {
             width: 100%;
             min-height: 3rem;
             border: 0;
-            border-radius: 0.6rem;
-            background: linear-gradient(90deg, #18a0a6, #31c6b5);
-            color: #071426;
+            border-radius: 10px;
+            background: var(--ekt-gradient);
+            color: #ffffff;
             font-size: 1.05rem;
             font-weight: 700;
+            box-shadow: 0 8px 24px rgba(0, 160, 230, 0.2);
+            transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
         }
-        div.stButton > button:hover {
+        div.stButton > button:hover,
+        [data-testid="stButton"] > button:hover {
             border: 0;
-            background: #49d8c6;
-            color: #071426;
+            background: var(--ekt-gradient);
+            color: #ffffff;
+            transform: scale(1.02);
+            box-shadow: 0 12px 30px rgba(0, 160, 230, 0.32);
+            filter: brightness(1.08);
+        }
+        div.stButton > button:focus:not(:active),
+        [data-testid="stButton"] > button:focus:not(:active) {
+            color: #ffffff;
+            border-color: #00d2ff;
+            box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.25);
+        }
+        [data-testid="stAlert"], [data-testid="stAlertContainer"] {
+            border: 1px solid rgba(148, 180, 255, 0.14);
+            border-radius: 14px;
+            background: var(--ekt-card) !important;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+            color: #ffffff;
+        }
+        [data-testid="stAlert"] [data-testid="stMarkdownContainer"] p,
+        [data-testid="stAlertContainer"] [data-testid="stMarkdownContainer"] p {
+            color: #ffffff !important;
+        }
+        [data-testid="stMetric"] {
+            padding: 1rem 1.1rem;
+            border: 1px solid rgba(148, 180, 255, 0.14);
+            border-radius: 14px;
+            background: var(--ekt-card);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+        }
+        [data-testid="stTabs"] [role="tab"] {
+            color: #b9c7e6;
+        }
+        [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
+            color: #ffffff;
+        }
+        @media (max-width: 600px) {
+            .block-container {
+                width: min(100% - 1.25rem, 780px);
+                padding-top: 1rem;
+                padding-bottom: 2rem;
+            }
+            .ekt-hero {
+                padding-top: 1rem;
+            }
+            div.stButton > button:hover,
+            [data-testid="stButton"] > button:hover {
+                transform: scale(1.01);
+            }
         }
         .ekt-hero {
             padding: 1.5rem 0 1rem;
@@ -390,7 +489,7 @@ def main() -> None:
     st.session_state.setdefault("analysis_history", [])
     with st.sidebar:
         logo_path = (
-            Path(__file__).parent / "public" / "assets" / "ektheto-logo-light.png"
+            Path(__file__).parent / "assets" / "ektheto-logo-dark.png"
         )
         if logo_path.is_file():
             st.image(str(logo_path), width=160)

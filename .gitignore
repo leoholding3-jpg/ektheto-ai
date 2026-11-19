@@ -1,17 +1,26 @@
-node_modules/
-build/
-dist/
-dev-dist/
-server.js
-coverage/
-.DS_Store
-*.log
-.env*
+# Credentials
+.env
+.env.*
 !.env.example
+
+# Python
 __pycache__/
 *.py[cod]
-.pytest_cache/
 .venv/
 venv/
-.streamlit/secrets.toml
-public/assets/aistudio/ektheto_foto1_0583fcb1.jpg
+.pytest_cache/
+
+# Local tooling and temporary test artifacts
+.playwright-runtime/
+.test-temp/
+.test-tmp/
+test-temp/
+
+# Generated frontend output from the retired React app
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.DS_Store
+node_modules
