@@ -60,7 +60,10 @@ TEXT: dict[str, dict[str, str]] = {
         "network": "Não foi possível contactar o serviço de análise. Verifica a ligação e tenta novamente.",
         "provider": "O serviço não conseguiu analisar esta imagem.",
         "provider_unavailable": "O serviço de análise está temporariamente indisponível.",
-        "provider_credentials": "O serviço recusou as credenciais configuradas.",
+        "provider_credentials": (
+            "O Sightengine rejeitou as credenciais. Confirma SIGHTENGINE_USER e "
+            "SIGHTENGINE_SECRET nos Secrets do Streamlit Cloud ou no .env local."
+        ),
         "provider_rate_limit": "O limite de pedidos do serviço foi atingido. Tenta mais tarde.",
         "invalid_response": "O serviço devolveu uma resposta inválida.",
         "result": "Resultado da análise",
@@ -120,7 +123,10 @@ TEXT: dict[str, dict[str, str]] = {
         "network": "Could not reach the analysis service. Check your connection and try again.",
         "provider": "The service could not analyze this image.",
         "provider_unavailable": "The analysis service is temporarily unavailable.",
-        "provider_credentials": "The service rejected the configured credentials.",
+        "provider_credentials": (
+            "Sightengine rejected the credentials. Check SIGHTENGINE_USER and "
+            "SIGHTENGINE_SECRET in Streamlit Cloud Secrets or the local .env file."
+        ),
         "provider_rate_limit": "The service request limit was reached. Try again later.",
         "invalid_response": "The service returned an invalid response.",
         "result": "Analysis result",
@@ -180,7 +186,10 @@ TEXT: dict[str, dict[str, str]] = {
         "network": "No se pudo contactar con el servicio de análisis. Comprueba la conexión e inténtalo de nuevo.",
         "provider": "El servicio no pudo analizar esta imagen.",
         "provider_unavailable": "El servicio de análisis no está disponible temporalmente.",
-        "provider_credentials": "El servicio rechazó las credenciales configuradas.",
+        "provider_credentials": (
+            "Sightengine rechazó las credenciales. Comprueba SIGHTENGINE_USER y "
+            "SIGHTENGINE_SECRET en Streamlit Cloud Secrets o en el archivo .env local."
+        ),
         "provider_rate_limit": "Se alcanzó el límite de solicitudes. Inténtalo más tarde.",
         "invalid_response": "El servicio devolvió una respuesta no válida.",
         "result": "Resultado del análisis",
@@ -285,6 +294,23 @@ def localized_analysis_error(text: dict[str, str], error_key: str) -> str:
         "unavailable": "provider_unavailable",
     }.get(error_key, error_key)
     return text.get(text_key, text["analysis_error"])
+
+
+def get_sightengine_credentials() -> tuple[str, str]:
+    """Read Streamlit Cloud secrets first, then local environment/.env values."""
+    def read_credential(name: str) -> str:
+        try:
+            value = st.secrets.get(name)
+        except Exception:
+            value = None
+        if value is None or not str(value).strip():
+            value = os.getenv(name, "")
+        return str(value or "").strip()
+
+    return (
+        read_credential("SIGHTENGINE_USER"),
+        read_credential("SIGHTENGINE_SECRET"),
+    )
 
 
 def analyze_image(image_bytes: bytes, api_user: str, api_secret: str) -> float:
@@ -547,8 +573,7 @@ def main() -> None:
             type="primary",
             disabled=image_bytes is None,
         ):
-            api_user = os.getenv("SIGHTENGINE_USER")
-            api_secret = os.getenv("SIGHTENGINE_SECRET")
+            api_user, api_secret = get_sightengine_credentials()
             if not api_user or not api_secret:
                 st.error(text["missing_credentials"])
             elif image_bytes is not None:

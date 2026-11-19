@@ -1,5 +1,4 @@
 import os
-import tempfile
 import unittest
 from io import BytesIO
 from pathlib import Path
@@ -11,6 +10,7 @@ from app import (
     AnalysisError,
     analyze_image,
     classify_score,
+    get_sightengine_credentials,
     localized_analysis_error,
     parse_ai_generated_score,
     validate_image_bytes,
@@ -173,6 +173,37 @@ class TestLocalizedAnalysisErrors(unittest.TestCase):
                 with self.subTest(language=language, error_key=error_key):
                     message = localized_analysis_error(text, error_key)
                     self.assertNotEqual(message, text["analysis_error"])
+
+
+class TestSightengineCredentials(unittest.TestCase):
+    def test_prefers_streamlit_cloud_secrets_and_trims_whitespace(self) -> None:
+        with patch(
+            "app.st.secrets",
+            {
+                "SIGHTENGINE_USER": " cloud-user ",
+                "SIGHTENGINE_SECRET": " cloud-secret ",
+            },
+        ), patch(
+            "app.os.getenv",
+            side_effect=lambda name, default="": f"local-{name}",
+        ):
+            self.assertEqual(
+                get_sightengine_credentials(),
+                ("cloud-user", "cloud-secret"),
+            )
+
+    def test_uses_local_environment_when_a_cloud_secret_is_missing(self) -> None:
+        with patch("app.st.secrets", {"SIGHTENGINE_USER": "cloud-user"}), patch(
+            "app.os.getenv",
+            side_effect=lambda name, default="": {
+                "SIGHTENGINE_USER": "local-user",
+                "SIGHTENGINE_SECRET": " local-secret ",
+            }.get(name, default),
+        ):
+            self.assertEqual(
+                get_sightengine_credentials(),
+                ("cloud-user", "local-secret"),
+            )
 
 
 class TestSightengineRequest(unittest.TestCase):

@@ -16,6 +16,15 @@ streamlit run app.py
 
 Configure `SIGHTENGINE_USER` e `SIGHTENGINE_SECRET` no ficheiro `.env`, na raiz do projeto. Mantenha esse ficheiro fora do Git.
 
+No Streamlit Community Cloud, configure os mesmos nomes em **App settings → Secrets**:
+
+```toml
+SIGHTENGINE_USER = "o-seu-api-user"
+SIGHTENGINE_SECRET = "o-seu-api-secret"
+```
+
+Use o par **API User** e **API Secret** da página de chaves do Sightengine, sem espaços adicionais. A aplicação lê primeiro os Secrets do Streamlit e usa o ambiente local como fallback.
+
 ## Atualizar a captura
 
 Com a aplicação aberta em `http://localhost:8501`, execute:
