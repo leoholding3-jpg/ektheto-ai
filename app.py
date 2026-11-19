@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import math
+import hashlib
+from dataclasses import dataclass
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -13,7 +15,6 @@ truststore.inject_into_ssl()
 
 import requests
 import streamlit as st
-import streamlit.components.v1 as components
 from dotenv import load_dotenv
 from PIL import Image, UnidentifiedImageError
 
@@ -48,12 +49,15 @@ TEXT: dict[str, dict[str, str]] = {
         "analysis_tab": "Analisar imagem",
         "news_tab": "EkthetoRadar",
         "news_demo_notice": (
-            "Demonstração local: identifica termos no texto, mas não abre URLs, "
-            "consulta fontes externas nem verifica factos."
+            "Demonstração local: assinala termos e compara grafias de domínio com um catálogo limitado. "
+            "Não abre páginas, consulta fontes externas nem verifica factos."
         ),
         "history_tab": "Histórico da sessão",
+        "upload_heading": "Imagem para análise",
+        "upload_guidance": "A imagem só é enviada ao Sightengine quando selecionas Analisar imagem.",
         "upload": "Seleciona uma imagem (JPG, PNG, WEBP ou BMP)",
         "analyze": "Analisar imagem",
+        "loading": "A analisar a imagem",
         "missing_credentials": (
             "A análise não está configurada. Define SIGHTENGINE_USER e "
             "SIGHTENGINE_SECRET no ambiente ou no ficheiro .env."
@@ -73,24 +77,28 @@ TEXT: dict[str, dict[str, str]] = {
         "provider_rate_limit": "O limite de pedidos do serviço foi atingido. Tenta mais tarde.",
         "invalid_response": "O serviço devolveu uma resposta inválida.",
         "result": "Resultado da análise",
-        "score": "Sinal de geração por IA",
-        "high": "Sinais elevados de geração por IA",
+        "score": "Confiança do modelo Sightengine",
+        "score_help": "A classificação apresentada usa 80% ou mais como confiança elevada, 20% ou menos como baixa e valores intermédios como inconclusivos. O modelo avalia píxeis, mas não indica quais partes visuais motivaram a pontuação.",
+        "high": "Confiança elevada do modelo",
         "high_detail": (
-            "O serviço encontrou sinais compatíveis com geração por IA. "
-            "Isto não prova que a imagem seja falsa."
+            "O Sightengine atribuiu {score} de confiança de geração ou edição por modelo generativo, "
+            "com base nos píxeis. A API não aponta características visuais específicas que expliquem "
+            "este valor; não é prova da origem da imagem."
         ),
-        "low": "Poucos sinais de geração por IA",
+        "low": "Confiança baixa do modelo",
         "low_detail": (
-            "O serviço encontrou poucos sinais de geração por IA. "
-            "Isto não garante que a imagem seja autêntica."
+            "O Sightengine atribuiu {score}. Um valor baixo não confirma que a imagem seja autêntica "
+            "ou não tenha sido editada."
         ),
         "inconclusive": "Resultado inconclusivo",
         "inconclusive_detail": (
-            "Os sinais são mistos. Confirma a origem da imagem por outras fontes."
+            "A confiança do modelo está no intervalo intermédio. Confirma a origem da imagem por outras fontes."
         ),
+        "generator_detail": "Maior correspondência por gerador (confiança do modelo; não indica uma região visual):",
+        "no_generator_detail": "O serviço devolveu apenas a pontuação global; não forneceu detalhe por gerador ou região visual.",
         "disclaimer": (
-            "Este resultado é uma indicação automatizada, não uma prova de autenticidade. "
-            "A análise é processada pelo Sightengine."
+            "O Sightengine avalia os píxeis e devolve uma pontuação de confiança. Pode haver falsos positivos e negativos; "
+            "o valor não identifica por si só a origem nem prova autenticidade."
         ),
         "history_notice": (
             "O histórico contém apenas a hora e o resultado, nunca a imagem. "
@@ -100,7 +108,7 @@ TEXT: dict[str, dict[str, str]] = {
         "clear_history": "Limpar histórico da sessão",
         "history_cleared": "Histórico da sessão apagado.",
         "time": "Hora",
-        "history_score": "Sinal IA",
+        "history_score": "Confiança Sightengine",
         "history_result": "Resultado",
         "version": "Detector de imagens · análise privada por sessão",
     },
@@ -116,12 +124,15 @@ TEXT: dict[str, dict[str, str]] = {
         "analysis_tab": "Analyze image",
         "news_tab": "EkthetoRadar",
         "news_demo_notice": (
-            "Local demo: identifies terms in text but does not open URLs, "
-            "query external sources, or verify facts."
+            "Local demo: flags terms and compares domain spellings with a limited catalogue. "
+            "It does not open pages, query external sources, or verify facts."
         ),
         "history_tab": "Session history",
+        "upload_heading": "Image for analysis",
+        "upload_guidance": "The image is sent to Sightengine only when you select Analyze image.",
         "upload": "Choose an image (JPG, PNG, WEBP, or BMP)",
         "analyze": "Analyze image",
+        "loading": "Analyzing image",
         "missing_credentials": (
             "Analysis is not configured. Set SIGHTENGINE_USER and "
             "SIGHTENGINE_SECRET in the environment or .env file."
@@ -141,24 +152,26 @@ TEXT: dict[str, dict[str, str]] = {
         "provider_rate_limit": "The service request limit was reached. Try again later.",
         "invalid_response": "The service returned an invalid response.",
         "result": "Analysis result",
-        "score": "AI-generation signal",
-        "high": "Strong AI-generation signals",
+        "score": "Sightengine model confidence",
+        "score_help": "This display uses 80% or higher as high confidence, 20% or lower as low, and intermediate scores as inconclusive. The model evaluates pixels but does not identify the visual areas behind its score.",
+        "high": "High model confidence",
         "high_detail": (
-            "The service found signals consistent with AI generation. "
-            "This does not prove the image is fake."
+            "Sightengine assigned {score} confidence that the image was generated or edited by a generative model, "
+            "based on its pixels. The API does not identify specific visual features behind this value; it is not proof of origin."
         ),
-        "low": "Few AI-generation signals",
+        "low": "Low model confidence",
         "low_detail": (
-            "The service found few AI-generation signals. "
-            "This does not guarantee the image is authentic."
+            "Sightengine assigned {score}. A low value does not confirm that the image is authentic or unedited."
         ),
         "inconclusive": "Inconclusive result",
         "inconclusive_detail": (
-            "The signals are mixed. Check the image's origin using other sources."
+            "Model confidence is in the intermediate range. Check the image's origin using other sources."
         ),
+        "generator_detail": "Top generator matches (model confidence; not a visual-region explanation):",
+        "no_generator_detail": "The service returned only an overall score; it provided no generator or visual-region details.",
         "disclaimer": (
-            "This is an automated indicator, not proof of authenticity. "
-            "Analysis is processed by Sightengine."
+            "Sightengine evaluates pixels and returns a confidence score. False positives and negatives are possible; "
+            "the score alone does not identify origin or prove authenticity."
         ),
         "history_notice": (
             "History stores only the time and result, never the image. "
@@ -168,7 +181,7 @@ TEXT: dict[str, dict[str, str]] = {
         "clear_history": "Clear session history",
         "history_cleared": "Session history cleared.",
         "time": "Time",
-        "history_score": "AI signal",
+        "history_score": "Sightengine confidence",
         "history_result": "Result",
         "version": "Image detector · private session analysis",
     },
@@ -184,12 +197,15 @@ TEXT: dict[str, dict[str, str]] = {
         "analysis_tab": "Analizar imagen",
         "news_tab": "EkthetoRadar",
         "news_demo_notice": (
-            "Demostración local: identifica términos en el texto, pero no abre URL, "
-            "consulta fuentes externas ni verifica hechos."
+            "Demostración local: señala términos y compara dominios con un catálogo limitado. "
+            "No abre páginas, consulta fuentes externas ni verifica hechos."
         ),
         "history_tab": "Historial de sesión",
+        "upload_heading": "Imagen para analizar",
+        "upload_guidance": "La imagen solo se envía a Sightengine al seleccionar Analizar imagen.",
         "upload": "Selecciona una imagen (JPG, PNG, WEBP o BMP)",
         "analyze": "Analizar imagen",
+        "loading": "Analizando la imagen",
         "missing_credentials": (
             "El análisis no está configurado. Define SIGHTENGINE_USER y "
             "SIGHTENGINE_SECRET en el entorno o en el archivo .env."
@@ -209,24 +225,26 @@ TEXT: dict[str, dict[str, str]] = {
         "provider_rate_limit": "Se alcanzó el límite de solicitudes. Inténtalo más tarde.",
         "invalid_response": "El servicio devolvió una respuesta no válida.",
         "result": "Resultado del análisis",
-        "score": "Señal de generación por IA",
-        "high": "Señales altas de generación por IA",
+        "score": "Confianza del modelo Sightengine",
+        "score_help": "La clasificación usa 80% o más como confianza alta, 20% o menos como baja y los valores intermedios como no concluyentes. El modelo evalúa píxeles, pero no señala las zonas visuales que motivaron la puntuación.",
+        "high": "Confianza alta del modelo",
         "high_detail": (
-            "El servicio encontró señales compatibles con generación por IA. "
-            "Esto no demuestra que la imagen sea falsa."
+            "Sightengine asignó {score} de confianza de generación o edición por un modelo generativo, "
+            "basada en los píxeles. La API no señala características visuales concretas que expliquen este valor; no prueba el origen."
         ),
-        "low": "Pocas señales de generación por IA",
+        "low": "Confianza baja del modelo",
         "low_detail": (
-            "El servicio encontró pocas señales de generación por IA. "
-            "Esto no garantiza que la imagen sea auténtica."
+            "Sightengine asignó {score}. Un valor bajo no confirma que la imagen sea auténtica o no haya sido editada."
         ),
         "inconclusive": "Resultado no concluyente",
         "inconclusive_detail": (
-            "Las señales son mixtas. Comprueba el origen de la imagen con otras fuentes."
+            "La confianza del modelo está en el intervalo intermedio. Comprueba el origen de la imagen con otras fuentes."
         ),
+        "generator_detail": "Mayores coincidencias por generador (confianza del modelo; no indica una región visual):",
+        "no_generator_detail": "El servicio solo devolvió la puntuación global; no dio detalles por generador ni región visual.",
         "disclaimer": (
-            "Este resultado es un indicador automático, no una prueba de autenticidad. "
-            "El análisis lo procesa Sightengine."
+            "Sightengine evalúa los píxeles y devuelve una puntuación de confianza. Puede haber falsos positivos y negativos; "
+            "el valor no identifica por sí solo el origen ni prueba autenticidad."
         ),
         "history_notice": (
             "El historial solo guarda la hora y el resultado, nunca la imagen. "
@@ -236,7 +254,7 @@ TEXT: dict[str, dict[str, str]] = {
         "clear_history": "Borrar historial de sesión",
         "history_cleared": "Historial de sesión borrado.",
         "time": "Hora",
-        "history_score": "Señal IA",
+        "history_score": "Confianza Sightengine",
         "history_result": "Resultado",
         "version": "Detector de imágenes · análisis privado por sesión",
     },
@@ -295,10 +313,37 @@ def parse_ai_generated_score(payload: Any) -> float:
     return float(score)
 
 
+@dataclass(frozen=True)
+class ImageAnalysis:
+    score: float
+    generator_scores: tuple[tuple[str, float], ...] = ()
+
+
+def parse_generator_scores(payload: Any) -> tuple[tuple[str, float], ...]:
+    """Return the provider's optional per-generator confidence details."""
+    if not isinstance(payload, dict) or not isinstance(payload.get("type"), dict):
+        return ()
+    raw_scores = payload["type"].get("ai_generators")
+    if not isinstance(raw_scores, dict):
+        return ()
+
+    valid_scores = [
+        (str(name), float(score))
+        for name, score in raw_scores.items()
+        if isinstance(name, str)
+        and name
+        and isinstance(score, (int, float))
+        and not isinstance(score, bool)
+        and math.isfinite(score)
+        and 0 <= score <= 1
+    ]
+    return tuple(sorted(valid_scores, key=lambda item: item[1], reverse=True)[:3])
+
+
 def classify_score(score: float) -> str:
-    if score > 0.7:
+    if score >= 0.8:
         return "high"
-    if score < 0.3:
+    if score <= 0.2:
         return "low"
     return "inconclusive"
 
@@ -331,7 +376,7 @@ def get_sightengine_credentials() -> tuple[str, str]:
     )
 
 
-def analyze_image(image_bytes: bytes, api_user: str, api_secret: str) -> float:
+def analyze_image(image_bytes: bytes, api_user: str, api_secret: str) -> ImageAnalysis:
     content_type = validate_image_bytes(image_bytes)
     try:
         response = requests.post(
@@ -364,16 +409,20 @@ def analyze_image(image_bytes: bytes, api_user: str, api_secret: str) -> float:
         raise AnalysisError("invalid_response") from exc
 
     try:
-        return parse_ai_generated_score(payload)
+        return ImageAnalysis(
+            score=parse_ai_generated_score(payload),
+            generator_scores=parse_generator_scores(payload),
+        )
     except ValueError as exc:
         raise AnalysisError("invalid_response") from exc
 
 
 def main() -> None:
+    logo_path = Path(__file__).parent / "assets" / "ektheto-logo-dark.png"
     st.set_page_config(
         page_title="Ektheto — Deepfake detector",
-        page_icon="🛡️",
-        layout="centered",
+        page_icon=str(logo_path) if logo_path.is_file() else "E",
+        layout="wide",
     )
     st.markdown(
         """
@@ -404,13 +453,31 @@ def main() -> None:
             background: rgba(10, 17, 40, 0.92) !important;
         }
         [data-testid="stMainBlockContainer"] {
-            max-width: 780px;
+            max-width: 1160px;
         }
         .block-container {
-            width: min(100% - 2rem, 780px);
-            padding-top: clamp(1.25rem, 4vw, 2.75rem);
-            padding-bottom: 3rem;
+            width: min(100% - 3rem, 1160px);
+            padding-top: clamp(1.5rem, 3vw, 2.75rem);
+            padding-bottom: 4rem;
         }
+        [data-testid="stTabs"] { margin-top: 1.5rem; }
+        [data-testid="stFileUploader"] {
+            margin: 0.75rem 0 1.25rem;
+            padding: 1.15rem;
+            border: 1px solid rgba(148, 180, 255, 0.18);
+            border-radius: 14px;
+            background: rgba(17, 27, 61, 0.55);
+        }
+        [data-testid="stImage"] { margin: 1rem 0 1.5rem; }
+        [data-testid="stImage"] img { max-height: 520px; object-fit: contain; }
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            border-color: rgba(148, 180, 255, 0.2) !important;
+            border-radius: 14px !important;
+            background: rgba(17, 27, 61, 0.5);
+            padding: 1.15rem;
+        }
+        [data-testid="stMetric"] { min-height: 112px; }
+        [data-testid="stMarkdownContainer"] p { line-height: 1.65; }
         [data-testid="stMarkdownContainer"], [data-testid="stMarkdownContainer"] p,
         [data-testid="stMarkdownContainer"] h1, [data-testid="stMarkdownContainer"] h2,
         [data-testid="stMarkdownContainer"] h3,
@@ -496,7 +563,7 @@ def main() -> None:
         }
         @media (max-width: 600px) {
             .block-container {
-                width: min(100% - 1.25rem, 780px);
+                width: min(100% - 1.25rem, 1160px);
                 padding-top: 1rem;
                 padding-bottom: 2rem;
             }
@@ -509,20 +576,27 @@ def main() -> None:
             }
         }
         .ekt-hero {
-            padding: 1.5rem 0 1rem;
-            text-align: center;
+            padding: 0.5rem 0;
+            text-align: left;
         }
         .ekt-hero h1 {
             margin: 0;
             color: #ffffff;
-            font-size: clamp(2.8rem, 10vw, 4.5rem);
-            font-weight: 800;
-            letter-spacing: 0.16em;
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 700;
+            letter-spacing: -0.045em;
         }
         .ekt-hero p {
-            margin-top: 0.4rem;
+            max-width: 760px;
+            margin: 0.35rem 0 0;
             color: #c5cee0;
-            font-size: 1.1rem;
+            font-size: 1rem;
+        }
+        .page-description {
+            max-width: 920px;
+            margin: 0.75rem 0 1.5rem;
+            color: #d2d9e8;
+            line-height: 1.7;
         }
         </style>
         """,
@@ -531,15 +605,9 @@ def main() -> None:
 
     st.session_state.setdefault("language", "pt")
     st.session_state.setdefault("analysis_history", [])
+    st.session_state.setdefault("current_image_digest", None)
+    st.session_state.setdefault("current_analysis", None)
     with st.sidebar:
-        logo_path = (
-            Path(__file__).parent / "assets" / "ektheto-logo-dark.png"
-        )
-        if logo_path.is_file():
-            st.image(str(logo_path), width=160)
-        else:
-            st.markdown("## Ektheto")
-        st.caption("Deepfake image detector")
         selected_language = st.selectbox(
             "Language / Idioma",
             options=tuple(LANGUAGES),
@@ -550,103 +618,139 @@ def main() -> None:
         st.caption(TEXT[selected_language]["version"])
 
     text = TEXT[selected_language]
+    brand_column, intro_column = st.columns([1, 8], vertical_alignment="center", gap="large")
+    with brand_column:
+        if logo_path.is_file():
+            st.image(str(logo_path), width=104)
+        else:
+            st.markdown("## Ektheto")
+    with intro_column:
+        st.markdown(
+            f'<div class="ekt-hero"><h1>Ektheto</h1><p>{text["tagline"]}</p></div>',
+            unsafe_allow_html=True,
+        )
     st.markdown(
-        f"""
-        <div class="ekt-hero">
-            <h1>Ektheto</h1>
-            <p>{text["tagline"]}</p>
-        </div>
-        """,
+        f'<p class="page-description">{text["description"]}</p>',
         unsafe_allow_html=True,
     )
-    st.write(text["description"])
     analysis_tab, news_tab, history_tab = st.tabs(
         [text["analysis_tab"], text["news_tab"], text["history_tab"]]
     )
 
     with analysis_tab:
-        uploaded_file = st.file_uploader(
-            text["upload"],
-            type=["jpg", "jpeg", "png", "webp", "bmp"],
-            max_upload_size=10,
-            key="deepfake_image_upload",
-        )
-        image_bytes: bytes | None = None
-        if uploaded_file is not None:
-            try:
-                image_bytes = uploaded_file.getvalue()
-                validate_image_bytes(image_bytes)
-                st.image(image_bytes, caption=text["upload"], width="stretch")
-            except ValueError as exc:
-                image_bytes = None
-                if str(exc) == "size":
-                    st.error(text["large_image"])
-                elif str(exc) == "dimensions":
-                    st.error(text["large_dimensions"])
-                else:
-                    st.error(text["invalid_image"])
-
-        if st.button(
-            text["analyze"],
-            type="primary",
-            disabled=image_bytes is None,
-        ):
-            api_user, api_secret = get_sightengine_credentials()
-            if not api_user or not api_secret:
-                st.error(text["missing_credentials"])
-            elif image_bytes is not None:
+        with st.container(border=True):
+            st.subheader(text["upload_heading"])
+            st.caption(text["upload_guidance"])
+            uploaded_file = st.file_uploader(
+                text["upload"],
+                type=["jpg", "jpeg", "png", "webp", "bmp"],
+                max_upload_size=10,
+                key="deepfake_image_upload",
+            )
+            image_bytes: bytes | None = None
+            if uploaded_file is not None:
                 try:
-                    with st.spinner(text["analysis_tab"]):
-                        score = analyze_image(image_bytes, api_user, api_secret)
+                    image_bytes = uploaded_file.getvalue()
+                    validate_image_bytes(image_bytes)
+                    st.image(image_bytes, caption=uploaded_file.name, width=520)
                 except ValueError as exc:
+                    image_bytes = None
                     if str(exc) == "size":
                         st.error(text["large_image"])
                     elif str(exc) == "dimensions":
                         st.error(text["large_dimensions"])
                     else:
                         st.error(text["invalid_image"])
-                except AnalysisError as exc:
-                    error_key = str(exc)
-                    if error_key not in {
-                        "timeout",
-                        "network",
-                        "credentials",
-                        "rate_limit",
-                        "unavailable",
-                        "invalid_response",
-                        "provider",
-                    }:
-                        error_key = "analysis_error"
-                    st.error(localized_analysis_error(text, error_key))
-                else:
-                    verdict = classify_score(score)
-                    st.session_state.analysis_history.insert(
-                        0,
-                        {
-                            "time": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M"),
+
+            image_digest = hashlib.sha256(image_bytes).hexdigest() if image_bytes else None
+            if image_digest != st.session_state.current_image_digest:
+                st.session_state.current_image_digest = image_digest
+                st.session_state.current_analysis = None
+
+            if st.button(
+                text["analyze"],
+                type="primary",
+                disabled=image_bytes is None,
+                use_container_width=True,
+            ):
+                st.session_state.current_analysis = None
+                api_user, api_secret = get_sightengine_credentials()
+                if not api_user or not api_secret:
+                    st.error(text["missing_credentials"])
+                elif image_bytes is not None:
+                    try:
+                        with st.spinner(text["loading"]):
+                            analysis = analyze_image(image_bytes, api_user, api_secret)
+                    except ValueError as exc:
+                        if str(exc) == "size":
+                            st.error(text["large_image"])
+                        elif str(exc) == "dimensions":
+                            st.error(text["large_dimensions"])
+                        else:
+                            st.error(text["invalid_image"])
+                    except AnalysisError as exc:
+                        error_key = str(exc)
+                        if error_key not in {
+                            "timeout",
+                            "network",
+                            "credentials",
+                            "rate_limit",
+                            "unavailable",
+                            "invalid_response",
+                            "provider",
+                        }:
+                            error_key = "analysis_error"
+                        st.error(localized_analysis_error(text, error_key))
+                    else:
+                        score = analysis.score
+                        verdict = classify_score(score)
+                        st.session_state.current_analysis = {
                             "score": score,
                             "verdict": verdict,
-                        },
+                            "generator_scores": analysis.generator_scores,
+                        }
+                        st.session_state.analysis_history.insert(
+                            0,
+                            {
+                                "time": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M"),
+                                "score": score,
+                                "verdict": verdict,
+                            },
+                        )
+
+        current_analysis = st.session_state.current_analysis
+        if current_analysis is not None:
+            score = current_analysis["score"]
+            verdict = current_analysis["verdict"]
+            with st.container(border=True):
+                st.subheader(text["result"])
+                st.metric(text["score"], f"{score:.1%}")
+                st.caption(text["score_help"])
+                if current_analysis["generator_scores"]:
+                    st.caption(text["generator_detail"])
+                    generator_summary = " ? ".join(
+                        f"{name.replace('_', ' ').title()}: {value:.1%}"
+                        for name, value in current_analysis["generator_scores"]
                     )
-                    st.subheader(text["result"])
-                    st.metric(text["score"], f"{score:.1%}")
-                    if verdict == "high":
-                        st.error(f'{text["high"]}. {text["high_detail"]}')
-                    elif verdict == "low":
-                        st.success(f'{text["low"]}. {text["low_detail"]}')
-                    else:
-                        st.warning(f'{text["inconclusive"]}. {text["inconclusive_detail"]}')
-                    st.caption(text["disclaimer"])
+                    st.write(generator_summary)
+                else:
+                    st.caption(text["no_generator_detail"])
+
+                detail_key = f"{verdict}_detail"
+                detail_message = text[detail_key].format(score=f"{score:.1%}")
+                if verdict == "high":
+                    st.warning(f'{text["high"]}. {detail_message}')
+                elif verdict == "low":
+                    st.info(f'{text["low"]}. {detail_message}')
+                else:
+                    st.warning(f'{text["inconclusive"]}. {detail_message}')
+                st.caption(text["disclaimer"])
 
     with news_tab:
         st.warning(text["news_demo_notice"])
         demo_path = Path(__file__).parent / "assets" / "ektheto-radar.html"
         if demo_path.is_file():
-            components.html(
-                demo_path.read_text(encoding="utf-8"),
-                height=1120,
-                scrolling=True,
-            )
+            st.iframe(demo_path, height=1300, alt="EkthetoRadar — interface demonstrativa")
         else:
             st.error("The news radar demo file is missing.")
 

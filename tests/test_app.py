@@ -12,6 +12,7 @@ from app import (
     classify_score,
     get_sightengine_credentials,
     localized_analysis_error,
+    parse_generator_scores,
     parse_ai_generated_score,
     validate_image_bytes,
     TEXT,
@@ -139,10 +140,11 @@ class TestScoreValidation(unittest.TestCase):
     def test_classifies_threshold_boundaries(self) -> None:
         cases = {
             0.0: "low",
-            0.2999: "low",
-            0.3: "inconclusive",
-            0.7: "inconclusive",
-            0.7001: "high",
+            0.2: "low",
+            0.2001: "inconclusive",
+            0.5: "inconclusive",
+            0.7999: "inconclusive",
+            0.8: "high",
             1.0: "high",
         }
         for score, expected in cases.items():
@@ -152,7 +154,7 @@ class TestScoreValidation(unittest.TestCase):
     def test_score_classification_is_consistent_across_full_range(self) -> None:
         for step in range(101):
             score = step / 100
-            expected = "low" if score < 0.3 else "high" if score > 0.7 else "inconclusive"
+            expected = "low" if score <= 0.2 else "high" if score >= 0.8 else "inconclusive"
             with self.subTest(score=score):
                 self.assertEqual(classify_score(score), expected)
 
@@ -220,17 +222,30 @@ class TestSightengineRequest(unittest.TestCase):
         response = MagicMock(status_code=200)
         response.json.return_value = {
             "status": "success",
-            "type": {"ai_generated": 0.42},
+            "type": {
+                "ai_generated": 0.42,
+                "ai_generators": {"gpt": 0.81, "dalle": 0.64, "invalid": float("nan")},
+            },
         }
         with patch("app.requests.post", return_value=response) as post:
-            score = analyze_image(self.image, "test-user", "test-secret")
+            result = analyze_image(self.image, "test-user", "test-secret")
 
-        self.assertEqual(score, 0.42)
+        self.assertEqual(result.score, 0.42)
+        self.assertEqual(result.generator_scores, (("gpt", 0.81), ("dalle", 0.64)))
         kwargs = post.call_args.kwargs
         self.assertEqual(kwargs["data"]["api_user"], "test-user")
         self.assertEqual(kwargs["data"]["api_secret"], "test-secret")
         self.assertEqual(kwargs["files"]["media"][2], "image/png")
         self.assertEqual(kwargs["timeout"], 30)
+
+    def test_generator_scores_are_optional_and_sorted(self) -> None:
+        payload = {"status": "success", "type": {"ai_generated": 0.62}}
+        self.assertEqual(parse_generator_scores(payload), ())
+        payload["type"]["ai_generators"] = {"model-b": 0.4, "model-a": 0.9}
+        self.assertEqual(
+            parse_generator_scores(payload),
+            (("model-a", 0.9), ("model-b", 0.4)),
+        )
 
     def test_maps_provider_status_codes_to_safe_errors(self) -> None:
         cases = {
@@ -343,7 +358,7 @@ class TestStreamlitInterface(unittest.TestCase):
         self.assertEqual(len(app_test.exception), 0)
         self.assertTrue(
             any(
-                "não abre URLs" in warning.value
+                "catálogo limitado" in warning.value
                 for warning in app_test.warning
             )
         )
@@ -356,10 +371,10 @@ class TestStreamlitInterface(unittest.TestCase):
         self.assertIn("<title>EkthetoRadar | Leitura de informação</title>", radar_html)
         self.assertIn("class=\"masthead\"", radar_html)
         self.assertIn("class=\"workspace\"", radar_html)
-        self.assertIn("fontes externas não são consultadas", radar_html)
+        self.assertIn("catálogo limitado de domínios", radar_html)
         self.assertIn("não confirma factos", radar_html)
         self.assertNotIn("FatoRadar", radar_html)
-        self.assertNotIn("Reuters", radar_html)
+        self.assertNotIn('aria-label="Reuters"', radar_html)
         self.assertIn("@media (max-width: 760px)", radar_html)
 
     def test_premium_styles_are_injected_into_the_rendered_app(self) -> None:
@@ -463,6 +478,42 @@ class TestStreamlitInterface(unittest.TestCase):
             ).click().run()
             self.assertEqual(app_test.session_state["analysis_history"], [])
             self.assertEqual(len(app_test.success), 1)
+
+    def test_changing_uploaded_image_clears_previous_score_and_uses_new_result(self) -> None:
+        response_a = MagicMock(status_code=200)
+        response_a.json.return_value = {
+            "status": "success",
+            "type": {"ai_generated": 0.42},
+        }
+        response_b = MagicMock(status_code=200)
+        response_b.json.return_value = {
+            "status": "success",
+            "type": {"ai_generated": 0.91},
+        }
+        real_getenv = os.getenv
+
+        def fake_getenv(name: str, default: str | None = None) -> str | None:
+            if name in {"SIGHTENGINE_USER", "SIGHTENGINE_SECRET"}:
+                return "test-credential"
+            return real_getenv(name, default)
+
+        with patch("os.getenv", side_effect=fake_getenv), patch(
+            "requests.post", side_effect=[response_a, response_b]
+        ):
+            app_test = AppTest.from_file(str(self.app_path)).run()
+            app_test.file_uploader[0].upload(
+                "first.png", make_image(), "image/png"
+            ).run()
+            next(button for button in app_test.button if button.label == "Analisar imagem").click().run()
+            self.assertEqual(app_test.session_state["current_analysis"]["score"], 0.42)
+
+            app_test.file_uploader[0].upload(
+                "second.png", make_image(size=(12, 12)), "image/png"
+            ).run()
+            self.assertIsNone(app_test.session_state["current_analysis"])
+            next(button for button in app_test.button if button.label == "Analisar imagem").click().run()
+            self.assertEqual(app_test.session_state["current_analysis"]["score"], 0.91)
+            self.assertEqual(len(app_test.session_state["analysis_history"]), 2)
 
     def test_missing_credentials_never_calls_provider(self) -> None:
         real_getenv = os.getenv

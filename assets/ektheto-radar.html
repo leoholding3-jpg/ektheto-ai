@@ -73,12 +73,15 @@
     .visual-top { position: absolute; z-index: 2; top: 15px; left: 17px; right: 17px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
     .visual-label, .status-pill { padding: 5px 8px; border: 1px solid #596165; color: #e6e8e7; font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
     .status-pill { color: #f1c9be; border-color: #79584f; }
+    .status-pill.risk { color: #ffd7cf; border-color: #c44b32; background: #482d29; }
+    .status-pill.caution { color: #f1d5a2; border-color: #927142; background: #3e382d; }
+    .status-pill.neutral { color: #e6e8e7; border-color: #596165; background: transparent; }
     #radar-3d { position: absolute; inset: 0; }
     #radar-3d canvas { display: block; width: 100%; height: 100%; cursor: grab; }
     #radar-3d canvas:active { cursor: grabbing; }
     .visual-caption { position: absolute; z-index: 2; bottom: 14px; left: 17px; margin: 0; color: #c4cac9; font-size: 10px; }
     .result-panel { margin-top: 20px; }
-    .result-grid { display: grid; grid-template-columns: minmax(220px, 1fr) 1fr 1fr 1fr; }
+    .result-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .result-cell { min-height: 96px; padding: 17px 19px; border-right: 1px solid var(--line); }
     .result-cell:last-child { border-right: 0; }
     .result-label { display: block; margin-bottom: 9px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -103,7 +106,8 @@
       .visual-panel { min-height: 300px; }
       .result-grid { grid-template-columns: 1fr 1fr; }
       .result-cell:nth-child(2) { border-right: 0; }
-      .result-cell:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .result-cell:nth-child(n+3) { border-top: 1px solid var(--line); }
+      .result-cell:last-child { grid-column: 1 / -1; border-right: 0; }
       .methodology { grid-template-columns: 1fr; }
       .method-item, .method-item + .method-item { padding: 13px 0; border-left: 0; }
       .method-item + .method-item { border-top: 1px solid var(--line); }
@@ -138,10 +142,10 @@
   <main class="shell" id="top">
     <section class="page-intro">
       <div><p class="eyebrow">Leitura de informação</p><h1>Observe os sinais antes de partilhar uma notícia.</h1></div>
-      <p class="intro-copy">Introduza texto para ver padrões de linguagem assinalados pela demonstração. O resultado não confirma factos nem avalia a credibilidade de uma fonte.</p>
+      <p class="intro-copy">Introduza texto para identificar termos ou uma URL para comparar a grafia do domínio com um catálogo limitado. O resultado não confirma factos nem avalia a credibilidade do artigo.</p>
     </section>
 
-    <div class="demo-notice" role="note"><span class="notice-mark" aria-hidden="true">i</span><span><strong>Modo de demonstração.</strong> A classificação é simulada por palavras-chave. URLs não são abertas e fontes externas não são consultadas.</span></div>
+    <div class="demo-notice" role="note"><span class="notice-mark" aria-hidden="true">i</span><span><strong>Modo de demonstração.</strong> Texto: correspondência simples de termos. URL: comparação com um catálogo limitado de domínios. Não abre páginas nem consulta fontes externas.</span></div>
 
     <section class="workspace" id="analisar" aria-label="Análise demonstrativa">
       <div class="panel input-panel">
@@ -154,7 +158,7 @@
           <label for="input-conteudo">Conteúdo a analisar</label>
           <textarea id="input-conteudo" rows="5" placeholder="Cole aqui o texto da notícia."></textarea>
           <p class="field-error" id="input-error" role="status" aria-live="polite"></p>
-          <div class="input-footer"><p class="helper">Para analisar termos, cole o texto. A demonstração não acede a páginas através de URLs.</p><button class="primary-button" type="button" onclick="simularAnalise()">Analisar texto</button></div>
+          <div class="input-footer"><p class="helper" id="input-help">Cole o texto para identificar termos. Para URLs, só é analisada a grafia do domínio.</p><button class="primary-button" id="analyze-button" type="button" onclick="simularAnalise()">Analisar texto</button></div>
         </div>
       </div>
 
@@ -168,15 +172,16 @@
     <section class="panel result-panel" id="resultado-card" aria-live="polite">
       <div class="panel-heading"><h2 class="section-title">Indicador da demonstração</h2><span class="panel-kicker">Não é uma verificação factual</span></div>
       <div class="result-grid">
-        <div class="result-cell"><span class="result-label">Padrão identificado</span><span class="result-value" id="res-titulo">Aguardando texto</span></div>
-        <div class="result-cell"><span class="result-label">Sinal textual</span><span class="result-value" id="res-badge">Em espera</span></div>
-        <div class="result-cell"><span class="result-label">Intensidade simulada</span><span class="result-value score-value" id="res-score-text">—</span></div>
+        <div class="result-cell"><span class="result-label">Entrada analisada</span><span class="result-value" id="res-titulo">Aguardando entrada</span></div>
+        <div class="result-cell"><span class="result-label">Resultado</span><span class="result-value" id="res-badge">Em espera</span></div>
+        <div class="result-cell"><span class="result-label">Nível de risco</span><span class="result-value score-value" id="res-score-text">Não avaliado</span></div>
         <div class="result-cell"><span class="result-label">Fontes consultadas</span><span class="result-value" id="res-fontes">Nenhuma</span></div>
+        <div class="result-cell"><span class="result-label">Motivo</span><span class="result-value" id="res-motivo">Ainda não foi feita uma análise.</span></div>
       </div>
     </section>
 
     <section class="methodology" id="metodologia" aria-label="Limites da demonstração">
-      <div class="method-item"><h3>O que é analisado</h3><p>Correspondências simples com termos de urgência ou referência.</p></div>
+      <div class="method-item"><h3>O que é analisado</h3><p>Termos predefinidos no texto e semelhanças de domínio num catálogo limitado.</p></div>
       <div class="method-item"><h3>O que não é analisado</h3><p>Autoria, contexto, fontes, imagens ou factos da notícia.</p></div>
       <div class="method-item"><h3>Como usar o resultado</h3><p>Use-o apenas para explorar a interface. Confirme informação em fontes independentes.</p></div>
     </section>
@@ -248,53 +253,208 @@
       document.getElementById('tab-url').setAttribute('aria-selected', String(isUrl));
       const input = document.getElementById('input-conteudo');
       input.dataset.mode = type;
-      input.placeholder = isUrl ? 'Cole uma URL. A demonstração não vai abrir a página.' : 'Cole aqui o texto da notícia.';
+      input.placeholder = isUrl ? 'Cole a URL completa para verificar a grafia do dom?nio.' : 'Cole aqui o texto da not?cia.';
+      document.getElementById('analyze-button').textContent = isUrl ? 'Verificar dom?nio' : 'Analisar texto';
+      document.getElementById('input-help').textContent = isUrl
+        ? 'A verifica??o compara o dom?nio com um cat?logo limitado. N?o abre a p?gina nem confirma o conte?do.'
+        : 'A an?lise procura termos de linguagem. N?o determina se a not?cia ? verdadeira ou falsa.';
       document.getElementById('input-error').textContent = '';
+      resetResult();
       input.focus();
+    }
+
+    const referenceDomains = [
+      { name: 'Reuters', domain: 'reuters.com' }, { name: 'BBC', domain: 'bbc.com' },
+      { name: 'BBC', domain: 'bbc.co.uk' }, { name: 'Associated Press', domain: 'apnews.com' },
+      { name: 'CNN', domain: 'cnn.com' }, { name: 'Al Jazeera', domain: 'aljazeera.com' },
+      { name: 'Deutsche Welle', domain: 'dw.com' }, { name: 'France 24', domain: 'france24.com' },
+      { name: 'Voice of America', domain: 'voanews.com' }, { name: 'AFP', domain: 'afp.com' },
+      { name: 'Snopes', domain: 'snopes.com' }, { name: 'FactCheck.org', domain: 'factcheck.org' },
+      { name: 'Google', domain: 'google.com' }, { name: 'Microsoft', domain: 'microsoft.com' },
+      { name: 'Apple', domain: 'apple.com' }, { name: 'Amazon', domain: 'amazon.com' },
+      { name: 'PayPal', domain: 'paypal.com' }, { name: 'Facebook', domain: 'facebook.com' },
+      { name: 'Instagram', domain: 'instagram.com' }, { name: 'LinkedIn', domain: 'linkedin.com' }
+    ];
+    const multiPartSuffixes = new Set(['co.uk', 'org.uk', 'gov.uk', 'com.au', 'co.za', 'com.br', 'co.ao', 'gov.ao', 'org.ao']);
+    const normaliseText = value => value.toLocaleLowerCase('pt').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    function getBaseDomain(host) {
+      const labels = host.toLowerCase().replace(/\.$/, '').split('.');
+      const lastTwo = labels.slice(-2).join('.');
+      const count = multiPartSuffixes.has(lastTwo) ? 3 : 2;
+      return labels.slice(-Math.min(count, labels.length)).join('.');
+    }
+
+    function editDistanceAtMostOne(a, b) {
+      if (a === b) return true;
+      if (Math.abs(a.length - b.length) > 1) return false;
+      let i = 0, j = 0, edits = 0;
+      while (i < a.length && j < b.length) {
+        if (a[i] === b[j]) { i++; j++; continue; }
+        if (++edits > 1) return false;
+        if (a.length > b.length) i++;
+        else if (b.length > a.length) j++;
+        else { i++; j++; }
+      }
+      if (i < a.length || j < b.length) edits++;
+      return edits <= 1;
+    }
+
+    function resetResult() {
+      document.getElementById('res-titulo').textContent = 'Aguardando entrada';
+      document.getElementById('res-badge').textContent = 'Em espera';
+      document.getElementById('res-score-text').textContent = 'N?o avaliado';
+      document.getElementById('res-fontes').textContent = 'Nenhuma';
+      document.getElementById('res-motivo').textContent = 'Ainda n?o foi feita uma an?lise.';
+      const pill = document.getElementById('radar-status-pill');
+      pill.textContent = 'Em espera';
+      pill.className = 'status-pill neutral';
+      ringMaterial.color.setHex(0x879294);
+      globeMaterial.color.setHex(0x879294);
+      radarGroup.rotation.y = 0;
+    }
+
+    function setResult({ subject, classification, risk, sources, reason, state, color }) {
+      document.getElementById('res-titulo').textContent = subject;
+      document.getElementById('res-badge').textContent = classification;
+      document.getElementById('res-score-text').textContent = risk;
+      document.getElementById('res-fontes').textContent = sources;
+      document.getElementById('res-motivo').textContent = reason;
+      const pill = document.getElementById('radar-status-pill');
+      pill.textContent = state;
+      pill.className = `status-pill ${color}`;
+      const colorValue = color === 'risk' ? 0xc44b32 : color === 'caution' ? 0xb47a4b : 0x879294;
+      ringMaterial.color.setHex(colorValue);
+      globeMaterial.color.setHex(colorValue === 0x879294 ? colorValue : 0xb9a29b);
+      radarGroup.rotation.y += 0.22;
+    }
+
+    function analyzeDomain(text) {
+      let parsed;
+      try { parsed = new URL(text); }
+      catch { throw new Error('Introduza uma URL v?lida, incluindo https://.'); }
+      if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.hostname) {
+        throw new Error('Use uma URL que comece por http:// ou https://.');
+      }
+      if (parsed.username || parsed.password) {
+        throw new Error('Remova o nome de utilizador ou a palavra-passe da URL antes de continuar.');
+      }
+
+      const host = parsed.hostname.toLowerCase().replace(/\.$/, '');
+      const base = getBaseDomain(host);
+      const match = referenceDomains.find(item => item.domain === base);
+      if (match) {
+        const secure = parsed.protocol === 'https:';
+        setResult({
+          subject: host,
+          classification: secure ? 'Dom?nio no cat?logo' : 'Liga??o sem HTTPS',
+          risk: secure ? 'N?o avaliado' : 'Requer cautela',
+          sources: 'N?o consultadas',
+          reason: `${match.name}: a grafia coincide com o cat?logo de refer?ncia. Isto n?o confirma a p?gina, o artigo nem a origem oficial.`,
+          state: 'Sem verifica??o factual', color: secure ? 'neutral' : 'caution'
+        });
+        return;
+      }
+
+      const embedded = referenceDomains.find(item => host.includes(item.domain));
+      if (embedded) {
+        setResult({
+          subject: host, classification: 'Nome de refer?ncia no subdom?nio', risk: 'Poss?vel imita??o',
+          sources: 'N?o consultadas',
+          reason: `O endere?o cont?m ?${embedded.domain}?, mas o dom?nio principal ? ?${base}?. Verifique o dom?nio registado.`,
+          state: 'Requer verifica??o', color: 'risk'
+        });
+        return;
+      }
+
+      const similar = referenceDomains.find(item => {
+        const target = item.domain.split('.');
+        const candidate = base.split('.');
+        const targetName = target.slice(0, -1).join('.');
+        const candidateName = candidate.slice(0, -1).join('.');
+        const targetSuffix = target.at(-1);
+        const candidateSuffix = candidate.at(-1);
+        return (targetSuffix === candidateSuffix && editDistanceAtMostOne(targetName, candidateName)) ||
+          (targetName === candidateName && editDistanceAtMostOne(targetSuffix, candidateSuffix));
+      });
+      if (similar || host.includes('xn--')) {
+        const reference = similar ? ` O dom?nio ? parecido com ${similar.domain}.` : '';
+        setResult({
+          subject: host, classification: 'Grafia suspeita', risk: 'Poss?vel imita??o',
+          sources: 'N?o consultadas',
+          reason: `O endere?o n?o coincide com um dom?nio do cat?logo.${reference} A semelhan?a n?o prova fraude; confirme o endere?o por um canal independente.`,
+          state: 'Requer verifica??o', color: 'risk'
+        });
+        return;
+      }
+
+      const localAddress = host === 'localhost' || !host.includes('.') || /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+      setResult({
+        subject: host,
+        classification: localAddress ? 'Endere?o n?o p?blico' : 'Dom?nio fora do cat?logo',
+        risk: 'N?o avaliado', sources: 'N?o consultadas',
+        reason: localAddress
+          ? 'A aplica??o n?o valida endere?os locais ou IP diretamente.'
+          : 'N?o h? correspond?ncia neste cat?logo limitado. Isso n?o significa que o dom?nio seja seguro ou malicioso.',
+        state: 'Sem verifica??o factual', color: 'neutral'
+      });
     }
 
     function simularAnalise() {
       const input = document.getElementById('input-conteudo');
       const error = document.getElementById('input-error');
       const content = input.value.trim();
+      resetResult();
       error.textContent = '';
       if (!content) {
-        error.textContent = 'Introduza o texto para continuar.';
+        error.textContent = 'Introduza conte?do para continuar.';
         input.focus();
         return;
       }
       if (input.dataset.mode === 'url') {
-        error.textContent = 'A demonstração não abre URLs. Selecione Texto e cole o conteúdo da notícia.';
-        input.focus();
+        try { analyzeDomain(content); }
+        catch (validationError) { error.textContent = validationError.message; input.focus(); }
+        document.getElementById('resultado-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         return;
       }
 
-      const normalized = content.toLocaleLowerCase('pt');
-      let pattern = 'Sem termo de referência';
-      let signal = 'Nenhum padrão específico';
-      let intensity = 'Baixa';
-      let ringColor = 0x879294;
-      if (['urgente', 'partilhe', 'compartilhe', 'última oportunidade'].some(term => normalized.includes(term))) {
-        pattern = 'Expressões de urgência';
-        signal = 'Linguagem de pressão';
-        intensity = 'Elevada';
-        ringColor = 0xc44b32;
-      } else if (['oficial', 'relatório', 'comunicado'].some(term => normalized.includes(term))) {
-        pattern = 'Termo de referência';
-        signal = 'Referência institucional';
-        intensity = 'Moderada';
-        ringColor = 0xb47a4b;
+      const normalized = normaliseText(content);
+      const urgencyTerms = ['urgente', 'partilhe', 'compartilhe', 'ultima oportunidade', 'ultima chance'];
+      const referenceTerms = ['oficial', 'relatorio', 'comunicado'];
+      const matches = urgencyTerms.filter(term => normalized.includes(term));
+      const references = referenceTerms.filter(term => normalized.includes(term));
+      if (matches.length) {
+        setResult({
+          subject: `Termos detetados: ${matches.join(', ')}`,
+          classification: 'Linguagem de press?o', risk: 'Sinal textual',
+          sources: 'N?o consultadas',
+          reason: 'Este resultado identifica express?es de urg?ncia; n?o determina se a not?cia ? verdadeira ou falsa.',
+          state: 'Padr?o de linguagem', color: 'caution'
+        });
+      } else if (references.length) {
+        setResult({
+          subject: `Termos detetados: ${references.join(', ')}`,
+          classification: 'Refer?ncia institucional', risk: 'Sinal textual',
+          sources: 'N?o consultadas',
+          reason: 'A presen?a destas palavras n?o confirma a identidade de uma fonte nem a veracidade da not?cia.',
+          state: 'Padr?o de linguagem', color: 'neutral'
+        });
+      } else {
+        setResult({
+          subject: 'Nenhum termo do cat?logo encontrado',
+          classification: 'Sem correspond?ncia', risk: 'N?o avaliado',
+          sources: 'N?o consultadas',
+          reason: 'A demonstra??o n?o analisa factos, contexto, autoria ou credibilidade.',
+          state: 'Sem classifica??o', color: 'neutral'
+        });
       }
-      document.getElementById('res-titulo').textContent = pattern;
-      document.getElementById('res-badge').textContent = signal;
-      document.getElementById('res-score-text').textContent = intensity;
-      document.getElementById('res-fontes').textContent = 'Nenhuma';
-      document.getElementById('radar-status-pill').textContent = 'Demonstração atualizada';
-      ringMaterial.color.setHex(ringColor);
-      globeMaterial.color.setHex(ringColor === 0x879294 ? 0x879294 : 0xb9a29b);
-      radarGroup.rotation.y += 0.22;
       document.getElementById('resultado-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+
+    document.getElementById('input-conteudo').addEventListener('input', () => {
+      document.getElementById('input-error').textContent = '';
+      resetResult();
+    });
   </script>
 </body>
 </html>
