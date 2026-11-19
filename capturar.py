@@ -37,7 +37,7 @@ def main() -> None:
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(**launch_options)
         page = browser.new_page(
-            viewport={"width": 1440, "height": 1100},
+            viewport={"width": 1440, "height": 1800},
             device_scale_factor=1,
         )
         page.goto(APP_URL, wait_until="domcontentloaded", timeout=30_000)
@@ -48,6 +48,16 @@ def main() -> None:
         except PlaywrightTimeoutError as exc:
             browser.close()
             raise SystemExit("Streamlit loaded, but its app content did not become visible.") from exc
+        radar_tab = page.get_by_role("tab", name="Radar Ektheto 3D")
+        if radar_tab.count():
+            radar_tab.click()
+            try:
+                page.frame_locator("iframe").locator("#radar-3d canvas").wait_for(
+                    state="visible", timeout=30_000
+                )
+            except PlaywrightTimeoutError as exc:
+                browser.close()
+                raise SystemExit("Radar Ektheto 3D did not finish loading.") from exc
         dismiss_notice = page.get_by_role("button", name="Don't show again")
         if dismiss_notice.count():
             dismiss_notice.click()
