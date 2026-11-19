@@ -10,5 +10,6 @@
   "editor.autoIndent": "full",
   "terminal.integrated.defaultProfile.windows": "Command Prompt",
   "editor.guides.bracketPairs": true,
-  "liveServer.settings.donotShowInfoMsg": true
+  "liveServer.settings.donotShowInfoMsg": true,
+  "python.terminal.useEnvFile": true
 }

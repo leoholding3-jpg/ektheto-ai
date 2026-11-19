@@ -91,8 +91,6 @@ export interface TranslationBundle {
     addFolder: string;
     noThreads: string;
     moveToFolder: string;
-    dailyLimitReached: string;
-    usageCounter: string;
     errClipboardEmpty: string;
     errClipboardDenied: string;
     errEmptyInput: string;
@@ -252,7 +250,6 @@ export interface TranslationBundle {
     saveMemoryBtn: string;
     planTitle: string;
     planDesc: string;
-    usageTodayLabel: string;
     freePlanFeatures: string[];
     activePlanBadge: string;
     privacyTitle: string;
@@ -420,8 +417,6 @@ const TRANSLATIONS: Record<AppLanguage, TranslationBundle> = {
       addFolder: 'Add',
       noThreads: 'No saved checks yet.',
       moveToFolder: 'Folder',
-      dailyLimitReached: 'Daily check limit reached (15 checks/day). Try again tomorrow.',
-      usageCounter: 'checks today',
       errClipboardEmpty: 'Paste the text directly in the box below.',
       errClipboardDenied: 'Browser did not allow reading the clipboard. Please paste in the box below.',
       errEmptyInput: 'Please paste a link or write text to verify.',
@@ -642,11 +637,10 @@ const TRANSLATIONS: Record<AppLanguage, TranslationBundle> = {
       customInstructionsLabel: 'Custom instructions',
       customInstructionsPlaceholder: 'e.g. Always highlight missing primary dates and summarize tables concisely...',
       saveMemoryBtn: 'Save preferences',
-      planTitle: 'Plan & usage limit',
-      planDesc: 'One plan with smart model routing: lightweight models for simple summaries and advanced grounding for complex claims.',
-      usageTodayLabel: 'Daily usage',
+      planTitle: 'Availability & service quotas',
+      planDesc: 'The app does not impose a daily check limit. Availability and quotas may depend on external services.',
       freePlanFeatures: [
-        '15 verifications per day',
+        'No app-imposed daily check limit',
         'Lightweight + standard RSS & fact-check routing',
         'Local folders, history & response caching',
       ],
@@ -836,8 +830,6 @@ const TRANSLATIONS: Record<AppLanguage, TranslationBundle> = {
       addFolder: 'Criar',
       noThreads: 'Ainda sem verificações.',
       moveToFolder: 'Pasta',
-      dailyLimitReached: 'O limite diário de 15 verificações foi atingido. Tente novamente amanhã.',
-      usageCounter: 'verificações hoje',
       errClipboardEmpty: 'Cole o texto diretamente na caixa abaixo.',
       errClipboardDenied: 'O navegador não permitiu ler a área de transferência. Cole na caixa abaixo.',
       errEmptyInput: 'Cole um link ou escreva um texto para verificar.',
@@ -1058,11 +1050,10 @@ const TRANSLATIONS: Record<AppLanguage, TranslationBundle> = {
       customInstructionsLabel: 'Instruções personalizadas',
       customInstructionsPlaceholder: 'Ex.: Destaque datas ausentes e resuma tabelas numéricas...',
       saveMemoryBtn: 'Guardar preferências',
-      planTitle: 'Plano e limite de uso',
-      planDesc: 'Plano único com roteamento inteligente: modelos leves para resumos simples e pesquisa avançada para alegações complexas.',
-      usageTodayLabel: 'Uso diário',
+      planTitle: 'Disponibilidade e quotas dos serviços',
+      planDesc: 'A app não impõe um limite diário de verificações. A disponibilidade e as quotas podem depender de serviços externos.',
       freePlanFeatures: [
-        '15 verificações por dia',
+        'Sem limite diário imposto pela app',
         'Roteamento leve + RSS e checagem de factos',
         'Pastas locais, histórico e sistema de cache',
       ],
@@ -1252,8 +1243,6 @@ const TRANSLATIONS: Record<AppLanguage, TranslationBundle> = {
       addFolder: 'Crear',
       noThreads: 'Aún no hay verificaciones.',
       moveToFolder: 'Carpeta',
-      dailyLimitReached: 'Se alcanzó el límite diario de 15 verificaciones. Inténtalo de nuevo mañana.',
-      usageCounter: 'consultas hoy',
       errClipboardEmpty: 'Pega el texto directamente en el cuadro de abajo.',
       errClipboardDenied: 'El navegador no permitió leer el portapapeles. Pega en el cuadro de abajo.',
       errEmptyInput: 'Pega un enlace o escribe texto para verificar.',
@@ -1474,11 +1463,10 @@ const TRANSLATIONS: Record<AppLanguage, TranslationBundle> = {
       customInstructionsLabel: 'Instrucciones personalizadas',
       customInstructionsPlaceholder: 'Ej.: Destaca fechas faltantes y resume tablas numéricas...',
       saveMemoryBtn: 'Guardar preferencias',
-      planTitle: 'Plan y límite de uso',
-      planDesc: 'Un único plan con enrutamiento inteligente: modelos ligeros para resúmenes simples y búsqueda avanzada para afirmaciones complejas.',
-      usageTodayLabel: 'Uso diario',
+      planTitle: 'Disponibilidad y cuotas del servicio',
+      planDesc: 'La app no impone un límite diario de verificaciones. La disponibilidad y las cuotas pueden depender de servicios externos.',
       freePlanFeatures: [
-        '15 verificaciones al día',
+        'Sin límite diario impuesto por la app',
         'Enrutamiento ligero + RSS y verificadores',
         'Carpetas locales, historial y caché de respuestas',
       ],

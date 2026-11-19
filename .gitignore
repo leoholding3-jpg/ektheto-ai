@@ -8,3 +8,10 @@ coverage/
 *.log
 .env*
 !.env.example
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.streamlit/secrets.toml
+public/assets/aistudio/ektheto_foto1_0583fcb1.jpg

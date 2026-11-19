@@ -84,6 +84,9 @@ const SERVER_MESSAGES: Record<
     certaintyExaggerated: string;
     certaintyFalse: string;
     notAvailable: string;
+    sourcesOnlyFallback: string;
+    aiUnavailable: string;
+    aiRequestFailed: string;
     noteConfirmed: (n: number) => string;
     noteFalse: string;
     noteOutOfContext: string;
@@ -111,6 +114,9 @@ const SERVER_MESSAGES: Record<
     certaintyExaggerated: 'Exaggerated',
     certaintyFalse: 'False',
     notAvailable: 'not available',
+    sourcesOnlyFallback: 'Public sources only (no Gemini synthesis)',
+    aiUnavailable: 'Gemini synthesis is unavailable until GEMINI_API_KEY is configured. Retrieved public sources are shown for reference; this is not a full verification.',
+    aiRequestFailed: 'Gemini could not complete the synthesis. Retrieved public sources are shown for reference; this is not a full verification. Please retry later.',
     noteConfirmed: (n: number) => `Found ${n} credible public sources confirming the same story.`,
     noteFalse:
       'Certified fact-checkers or public news sources indicate this claim is false or debunked.',
@@ -145,6 +151,9 @@ const SERVER_MESSAGES: Record<
     certaintyExaggerated: 'Exagerado',
     certaintyFalse: 'Falso',
     notAvailable: 'não disponível',
+    sourcesOnlyFallback: 'Apenas fontes públicas (sem síntese Gemini)',
+    aiUnavailable: 'A síntese Gemini não está disponível até configurar GEMINI_API_KEY. As fontes públicas encontradas são mostradas como referência; isto não é uma verificação completa.',
+    aiRequestFailed: 'A síntese Gemini falhou. As fontes públicas encontradas são mostradas como referência; isto não é uma verificação completa. Tente novamente mais tarde.',
     noteConfirmed: (n: number) => `Encontradas ${n} fontes públicas credíveis a confirmar a história.`,
     noteFalse:
       'Agências de checagem ou fontes jornalísticas indicam que esta afirmação é falsa ou boato.',
@@ -179,6 +188,9 @@ const SERVER_MESSAGES: Record<
     certaintyExaggerated: 'Exagerado',
     certaintyFalse: 'Falso',
     notAvailable: 'no disponible',
+    sourcesOnlyFallback: 'Solo fuentes públicas (sin síntesis de Gemini)',
+    aiUnavailable: 'La síntesis de Gemini no está disponible hasta configurar GEMINI_API_KEY. Las fuentes públicas encontradas se muestran como referencia; esto no es una verificación completa.',
+    aiRequestFailed: 'La síntesis de Gemini falló. Las fuentes públicas encontradas se muestran como referencia; esto no es una verificación completa. Inténtalo de nuevo más tarde.',
     noteConfirmed: (n: number) => `Se encontraron ${n} fuentes públicas creíbles que confirman la historia.`,
     noteFalse:
       'Verificadores de hechos o medios públicos indican que esta afirmación es falsa o un bulo.',
@@ -2557,12 +2569,18 @@ async function runVerificationPipeline(
     preAiSources.length,
     subClaimsToSearch.length
   );
+  const geminiConfigured = Boolean(
+    process.env.GEMINI_API_KEY?.trim() &&
+      process.env.GEMINI_API_KEY.trim() !== 'MY_GEMINI_API_KEY'
+  );
+  const aiSynthesisRequested =
+    !cutoffTriggered && Boolean(searchQueryText) && searchQueryText.length >= 6;
 
   // Stage 4: Synthesis & Reasoning ("The Judge" with Chain-of-Thought)
   onStage?.('analyzing_content');
   let streamedAnyChunk = false;
   const aiCrossCheck =
-    !cutoffTriggered && searchQueryText && searchQueryText.length >= 6
+    aiSynthesisRequested
       ? await analyzeAndCrossCheckWithAI(
           searchQueryText,
           subClaimsToSearch,
@@ -2805,7 +2823,14 @@ async function runVerificationPipeline(
     summaryNote = msgs.noteNoSources;
   }
 
-  const draftAnalysis = citedAnalysis || summaryNote;
+  const synthesisFallbackMessage = !geminiConfigured
+    ? msgs.aiUnavailable
+    : aiSynthesisRequested && !aiCrossCheck
+      ? msgs.aiRequestFailed
+      : null;
+  const draftAnalysis = [citedAnalysis || summaryNote, synthesisFallbackMessage]
+    .filter((message): message is string => Boolean(message))
+    .join('\n\n');
 
   // Stage 5: Final Guardrails (Hallucination check, PII & Safety Tone)
   onStage?.('validating_guardrails');
@@ -2900,7 +2925,7 @@ async function runVerificationPipeline(
     queryUsed: searchQueryText || body.fileName || rawContent.slice(0, 120),
     note: summaryNote,
     checkedAt: new Date().toISOString(),
-    modelUsed: routedModel,
+    modelUsed: aiCrossCheck ? routedModel : msgs.sourcesOnlyFallback,
     cached: false,
     ragChunksUsed: ragChunks.length,
   };

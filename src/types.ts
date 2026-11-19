@@ -141,11 +141,6 @@ export interface CustomMemorySettings {
   instructions: string;
 }
 
-export interface DailyUsage {
-  date: string;
-  count: number;
-}
-
 export interface NewsItem {
   id: string;
   title: string;

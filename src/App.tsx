@@ -11,7 +11,6 @@ import {
 import type {
   AppLanguage,
   CustomMemorySettings,
-  DailyUsage,
   HistoryItem,
   ImageLoadMode,
   MediaType,
@@ -33,14 +32,11 @@ import {
   syncBrowserPermissionStates,
 } from './utils/permissions';
 import {
-  FREE_DAILY_LIMIT,
   getStorageInfo,
   hadStorageWriteError,
-  incrementDailyUsage,
   loadAnyFreshCachedNews,
   loadCachedNews,
   loadCountrySelection,
-  loadDailyUsage,
   loadDarkMode,
   loadFolders,
   loadImageLoadMode,
@@ -96,7 +92,6 @@ export default function App() {
   const [memorySettings, setMemorySettings] = useState<CustomMemorySettings>(() =>
     loadMemorySettings()
   );
-  const [dailyUsage, setDailyUsage] = useState<DailyUsage>(() => loadDailyUsage());
 
   const [verifyType, setVerifyType] = useState<MediaType>('link');
   const [verifyContent, setVerifyContent] = useState('');
@@ -270,9 +265,6 @@ export default function App() {
       payload: { type: MediaType; content: string }
     ) => {
       setVerifyResult(data);
-      const updatedUsage = incrementDailyUsage();
-      setDailyUsage(updatedUsage);
-
       const threadId = `thread-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       const titleSource = payload.content.trim() || data.queryUsed || data.source;
       const newThread: VerificationThread = {
@@ -315,13 +307,6 @@ export default function App() {
     ragContext?: string;
     metadataFilters?: MetadataSearchFilters;
   }) => {
-    const currentUsage = loadDailyUsage();
-    setDailyUsage(currentUsage);
-    if (currentUsage.count >= FREE_DAILY_LIMIT) {
-      setVerifyError(t.verificar.dailyLimitReached);
-      return;
-    }
-
     setVerifyLoading(true);
     setVerifyError(null);
     setVerifyResult(null);
@@ -815,8 +800,6 @@ export default function App() {
             onDeleteThread={handleDeleteThread}
             onCreateFolder={handleCreateFolder}
             onMoveThreadToFolder={handleMoveThreadToFolder}
-            dailyUsageCount={dailyUsage.count}
-            dailyLimit={FREE_DAILY_LIMIT}
           />
         </section>
 
@@ -899,8 +882,6 @@ export default function App() {
             onClearHistory={handleClearHistory}
             memorySettings={memorySettings}
             onSaveMemory={handleSaveMemory}
-            dailyUsageCount={dailyUsage.count}
-            dailyLimit={FREE_DAILY_LIMIT}
             onClearAllData={handleClearAllData}
           />
         </section>

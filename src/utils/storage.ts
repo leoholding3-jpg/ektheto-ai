@@ -1,7 +1,6 @@
 import type {
   AppLanguage,
   CustomMemorySettings,
-  DailyUsage,
   HistoryItem,
   ImageLoadMode,
   NewsItem,
@@ -17,7 +16,6 @@ const KEYS = {
   THREADS: 'ektheto_threads',
   FOLDERS: 'ektheto_folders',
   MEMORY: 'ektheto_custom_memory',
-  USAGE: 'ektheto_daily_usage',
   DARK_MODE: 'ektheto_dark_mode',
   PERMISSIONS: 'ektheto_permissions',
   COUNTRY: 'ektheto_country',
@@ -28,7 +26,6 @@ const KEYS = {
 } as const;
 
 export const NEWS_CACHE_TTL_MS = 20 * 60 * 1000;
-export const FREE_DAILY_LIMIT = 15;
 
 const APPROX_LOCAL_STORAGE_LIMIT = 5 * 1024 * 1024;
 const SOFT_WARNING_THRESHOLD = 4 * 1024 * 1024;
@@ -133,26 +130,6 @@ export function loadMemorySettings(): CustomMemorySettings {
 
 export function saveMemorySettings(settings: CustomMemorySettings): boolean {
   return safeWriteString(KEYS.MEMORY, JSON.stringify(settings));
-}
-
-function getTodayDateString(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-export function loadDailyUsage(): DailyUsage {
-  const today = getTodayDateString();
-  const stored = safeReadJson<Partial<DailyUsage>>(KEYS.USAGE, {});
-  if (stored.date === today && typeof stored.count === 'number') {
-    return { date: today, count: stored.count };
-  }
-  return { date: today, count: 0 };
-}
-
-export function incrementDailyUsage(): DailyUsage {
-  const current = loadDailyUsage();
-  const next: DailyUsage = { date: getTodayDateString(), count: current.count + 1 };
-  safeWriteString(KEYS.USAGE, JSON.stringify(next));
-  return next;
 }
 
 export function loadDarkMode(): boolean {

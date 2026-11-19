@@ -60,8 +60,6 @@ interface TabVerificarProps {
   onDeleteThread: (threadId: string) => void;
   onCreateFolder: (name: string) => void;
   onMoveThreadToFolder: (threadId: string, folderId: string) => void;
-  dailyUsageCount: number;
-  dailyLimit: number;
 }
 
 export function TabVerificar({
@@ -91,8 +89,6 @@ export function TabVerificar({
   onDeleteThread,
   onCreateFolder,
   onMoveThreadToFolder,
-  dailyUsageCount,
-  dailyLimit,
 }: TabVerificarProps) {
   const bundle = getTranslations(lang);
   const t = bundle.verificar;
@@ -384,9 +380,6 @@ export function TabVerificar({
           </span>
         </button>
 
-        <span className="text-xs text-[#6B7280] dark:text-slate-400 tabular-nums">
-          {`${dailyUsageCount} / ${dailyLimit} ${t.usageCounter}`}
-        </span>
       </div>
 
       {mobileSidebarOpen && <div className="lg:hidden">{sidebarContent}</div>}
@@ -405,9 +398,6 @@ export function TabVerificar({
                 </h2>
                 <p className="mt-1 text-sm text-[#4B5563] dark:text-slate-400">{t.subtitle}</p>
               </div>
-              <span className="hidden text-xs font-medium text-[#6B7280] dark:text-slate-400 tabular-nums lg:inline">
-                {`${dailyUsageCount} / ${dailyLimit} ${t.usageCounter}`}
-              </span>
             </div>
 
             <div

@@ -43,8 +43,6 @@ interface TabPerfilProps {
   onClearHistory: () => void;
   memorySettings: CustomMemorySettings;
   onSaveMemory: (next: CustomMemorySettings) => void;
-  dailyUsageCount: number;
-  dailyLimit: number;
   onClearAllData: () => void;
 }
 
@@ -76,8 +74,6 @@ export function TabPerfil({
   onClearHistory,
   memorySettings,
   onSaveMemory,
-  dailyUsageCount,
-  dailyLimit,
   onClearAllData,
 }: TabPerfilProps) {
   const t = getTranslations(lang).perfil;
@@ -124,8 +120,6 @@ export function TabPerfil({
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   };
-
-  const usagePercent = Math.min(100, Math.round((dailyUsageCount / dailyLimit) * 100));
 
   return (
     <div className="space-y-4">
@@ -377,28 +371,12 @@ export function TabPerfil({
         </div>
       </form>
 
-      {/* Plans, Usage Limits & Routing */}
+      {/* Service availability & routing */}
       <div className="rounded-lg border border-[#E5E7EB] bg-white p-5 dark:border-slate-800 dark:bg-[#111827]">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-base font-semibold text-[#111827] dark:text-white">
-            {t.planTitle}
-          </h3>
-          <span className="text-xs font-medium text-[#6B7280] dark:text-slate-400 tabular-nums">
-            {t.usageTodayLabel}: {`${dailyUsageCount} / ${dailyLimit}`}
-          </span>
-        </div>
+        <h3 className="text-base font-semibold text-[#111827] dark:text-white">
+          {t.planTitle}
+        </h3>
         <p className="mt-1 text-sm text-[#4B5563] dark:text-slate-400">{t.planDesc}</p>
-
-        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-sm bg-[#E5E7EB] dark:bg-slate-800">
-          <div
-            className={`h-full ${
-              dailyUsageCount >= dailyLimit
-                ? 'bg-amber-600'
-                : 'bg-[#0F172A] dark:bg-slate-300'
-            }`}
-            style={{ width: `${Math.max(4, usagePercent)}%` }}
-          />
-        </div>
 
         <div className="mt-4">
           <div className="rounded-lg border border-[#0F172A] bg-[#F9FAFB] p-4 dark:border-slate-400 dark:bg-slate-800/50">
