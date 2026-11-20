@@ -501,6 +501,18 @@ def main() -> None:
         }
         [data-testid="stImage"] { margin: 1rem 0 1.5rem; }
         [data-testid="stImage"] img { max-height: 520px; object-fit: contain; }
+        .st-key-uploaded_image_preview [data-testid="stImage"] {
+            width: 100%;
+        }
+        .st-key-uploaded_image_preview [data-testid="stImage"] img {
+            display: block;
+            width: auto !important;
+            max-width: 100%;
+            max-height: min(65vh, 520px);
+            height: auto;
+            margin-inline: auto;
+            object-fit: contain;
+        }
         [data-testid="stVerticalBlockBorderWrapper"] {
             border-color: rgba(148, 180, 255, 0.2) !important;
             border-radius: 14px !important;
@@ -601,6 +613,9 @@ def main() -> None:
             .ekt-hero {
                 padding-top: 1rem;
             }
+            .st-key-uploaded_image_preview [data-testid="stImage"] img {
+                max-height: min(55vh, 360px);
+            }
             div.stButton > button:hover,
             [data-testid="stButton"] > button:hover {
                 transform: scale(1.01);
@@ -683,7 +698,8 @@ def main() -> None:
                 try:
                     image_bytes = uploaded_file.getvalue()
                     validate_image_bytes(image_bytes)
-                    st.image(image_bytes, caption=uploaded_file.name, width=520)
+                    with st.container(key="uploaded_image_preview"):
+                        st.image(image_bytes, caption=uploaded_file.name, width="stretch")
                 except ValueError as exc:
                     image_bytes = None
                     if str(exc) == "size":

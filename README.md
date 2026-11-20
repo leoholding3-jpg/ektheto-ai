@@ -36,3 +36,13 @@ python capturar.py
 ```
 
 O script usa Playwright para guardar uma captura de página inteira em `assets/ektheto-app-screenshot.png`. Para definir outro endereço, use a variável `EKTHETO_APP_URL`.
+
+## Simular visitas diárias
+
+Com a aplicação aberta, execute o teste de saúde, que simula 100 visitas distribuídas ao longo de 24 horas e grava `relatorio_carga.json`:
+
+```powershell
+python carga_diaria.py
+```
+
+Para uma verificação rápida, reduza a janela, por exemplo `python carga_diaria.py --users 5 --window-hours 0.001`. O script só aceita `localhost` por predefinição. Um endereço remoto exige a opção explícita `--allow-remote`; use-a apenas num ambiente que tem autorização para testar. A simulação faz pedidos ao endpoint de saúde do Streamlit e não carrega imagens nem chama o Sightengine.
