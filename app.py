@@ -55,6 +55,12 @@ TEXT: dict[str, dict[str, str]] = {
         "history_tab": "Histórico da sessão",
         "upload_heading": "Imagem para análise",
         "upload_guidance": "A imagem só é enviada ao Sightengine quando selecionas Analisar imagem.",
+        "privacy_title": "Privacidade e segurança",
+        "privacy_body": (
+            "A imagem só é enviada ao Sightengine quando selecionas Analisar. "
+            "A Ektheto não guarda imagens no histórico da sessão. O resultado "
+            "é uma estimativa e não prova a autenticidade da imagem."
+        ),
         "upload": "Seleciona uma imagem (JPG, PNG, WEBP ou BMP)",
         "analyze": "Analisar imagem",
         "loading": "A analisar a imagem",
@@ -129,6 +135,12 @@ TEXT: dict[str, dict[str, str]] = {
         "history_tab": "Session history",
         "upload_heading": "Image for analysis",
         "upload_guidance": "The image is sent to Sightengine only when you select Analyze image.",
+        "privacy_title": "Privacy and security",
+        "privacy_body": (
+            "The image is sent to Sightengine only when you select Analyze. "
+            "Ektheto does not save images in session history. The result is an "
+            "estimate and does not prove that an image is authentic."
+        ),
         "upload": "Choose an image (JPG, PNG, WEBP, or BMP)",
         "analyze": "Analyze image",
         "loading": "Analyzing image",
@@ -203,6 +215,12 @@ TEXT: dict[str, dict[str, str]] = {
         "history_tab": "Historial de sesión",
         "upload_heading": "Imagen para analizar",
         "upload_guidance": "La imagen solo se envía a Sightengine al seleccionar Analizar imagen.",
+        "privacy_title": "Privacidad y seguridad",
+        "privacy_body": (
+            "La imagen solo se envía a Sightengine cuando seleccionas Analizar. "
+            "Ektheto no guarda imágenes en el historial de la sesión. El resultado "
+            "es una estimación y no demuestra la autenticidad de la imagen."
+        ),
         "upload": "Selecciona una imagen (JPG, PNG, WEBP o BMP)",
         "analyze": "Analizar imagen",
         "loading": "Analizando la imagen",
@@ -461,11 +479,14 @@ def main() -> None:
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
         :root {
-            --ekt-navy: #0a1128;
-            --ekt-card: #111b3d;
-            --ekt-cyan: #00d2ff;
-            --ekt-blue: #3a7bd5;
+            --ekt-navy: #f7f9fc;
+            --ekt-card: #ffffff;
+            --ekt-cyan: #1673d1;
+            --ekt-blue: #0d56aa;
             --ekt-gradient: linear-gradient(110deg, var(--ekt-cyan), var(--ekt-blue));
+            --ekt-ink: #172033;
+            --ekt-muted: #536174;
+            --ekt-border: #d7e0ec;
         }
         html, body, .stApp, [class*="css"], button, input, textarea, select {
             font-family: 'Inter', sans-serif;
@@ -473,7 +494,7 @@ def main() -> None:
         html, body, .stApp, [data-testid="stAppViewContainer"],
         [data-testid="stMain"], [data-testid="stSidebar"] {
             background: var(--ekt-navy) !important;
-            color: #ffffff;
+            color: var(--ekt-ink);
         }
         #MainMenu, footer, [data-testid="stToolbar"],
         [data-testid="stDecoration"], [data-testid="stDeployButton"],
@@ -481,23 +502,42 @@ def main() -> None:
             display: none !important;
         }
         [data-testid="stHeader"] {
-            background: rgba(10, 17, 40, 0.92) !important;
+            background: rgba(247, 249, 252, 0.96) !important;
         }
         [data-testid="stMainBlockContainer"] {
             max-width: 1160px;
         }
         .block-container {
             width: min(100% - 3rem, 1160px);
-            padding-top: clamp(1.5rem, 3vw, 2.75rem);
+            padding-top: clamp(1rem, 2vw, 1.75rem);
             padding-bottom: 4rem;
         }
-        [data-testid="stTabs"] { margin-top: 1.5rem; }
+        [data-testid="stTabs"] { margin-top: 1.25rem; overflow: visible; }
+        [data-testid="stTabs"] [data-baseweb="tab-list"] {
+            gap: clamp(0.5rem, 2vw, 1.5rem);
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scrollbar-width: thin;
+            border-bottom: 1px solid var(--ekt-border);
+        }
+        [data-testid="stTabs"] [role="tab"] {
+            flex: 0 0 auto;
+            min-height: 3.25rem;
+            padding-inline: clamp(0.5rem, 1.5vw, 1rem);
+            color: var(--ekt-muted);
+            font-weight: 600;
+        }
+        [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
+            color: var(--ekt-blue);
+            border-bottom-color: var(--ekt-blue);
+        }
         [data-testid="stFileUploader"] {
             margin: 0.75rem 0 1.25rem;
             padding: 1.15rem;
-            border: 1px solid rgba(148, 180, 255, 0.18);
-            border-radius: 14px;
-            background: rgba(17, 27, 61, 0.55);
+            border: 1px solid var(--ekt-border);
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 8px 24px rgba(22, 44, 77, 0.06);
         }
         [data-testid="stImage"] { margin: 1rem 0 1.5rem; }
         [data-testid="stImage"] img { max-height: 520px; object-fit: contain; }
@@ -514,10 +554,11 @@ def main() -> None:
             object-fit: contain;
         }
         [data-testid="stVerticalBlockBorderWrapper"] {
-            border-color: rgba(148, 180, 255, 0.2) !important;
-            border-radius: 14px !important;
-            background: rgba(17, 27, 61, 0.5);
+            border-color: var(--ekt-border) !important;
+            border-radius: 16px !important;
+            background: #ffffff;
             padding: 1.15rem;
+            box-shadow: 0 8px 24px rgba(22, 44, 77, 0.045);
         }
         [data-testid="stMetric"] { min-height: 112px; }
         [data-testid="stMarkdownContainer"] p { line-height: 1.65; }
@@ -525,32 +566,31 @@ def main() -> None:
         [data-testid="stMarkdownContainer"] h1, [data-testid="stMarkdownContainer"] h2,
         [data-testid="stMarkdownContainer"] h3,
         [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
-            color: #ffffff;
+            color: var(--ekt-ink);
         }
         [data-testid="stFileUploaderDropzone"],
         [data-testid="stFileUploader"] section,
         [data-testid="stFileUploadDropzone"] {
             border: 1.5px dashed transparent;
             border-radius: 14px;
-            background: linear-gradient(var(--ekt-card), var(--ekt-card)) padding-box,
-                        var(--ekt-gradient) border-box;
-            color: #ffffff;
+            background: #ffffff;
+            border-color: #9aa8b8;
+            color: var(--ekt-ink);
             transition: background-color 160ms ease, transform 160ms ease;
         }
         [data-testid="stFileUploaderDropzone"]:hover,
         [data-testid="stFileUploader"] section:hover,
         [data-testid="stFileUploadDropzone"]:hover {
-            background: linear-gradient(#16244d, #16244d) padding-box,
-                        var(--ekt-gradient) border-box;
+            background: #f2f7fd;
         }
         [data-testid="stFileUploaderDropzone"],
         [data-testid="stFileUploadDropzone"] {
-            color: #ffffff;
+            color: #34445a;
         }
         [data-testid="stFileUploader"] small,
         [data-testid="stFileUploader"] label,
         [data-testid="stFileUploader"] button {
-            color: #dbeafe !important;
+            color: #34445a !important;
         }
         div.stButton > button,
         [data-testid="stButton"] > button {
@@ -581,29 +621,38 @@ def main() -> None:
             box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.25);
         }
         [data-testid="stAlert"], [data-testid="stAlertContainer"] {
-            border: 1px solid rgba(148, 180, 255, 0.14);
+            border: 1px solid var(--ekt-border);
             border-radius: 14px;
-            background: var(--ekt-card) !important;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-            color: #ffffff;
+            background: #f1f5f9 !important;
+            box-shadow: 0 8px 24px rgba(22, 44, 77, 0.06);
+            color: var(--ekt-ink);
         }
         [data-testid="stAlert"] [data-testid="stMarkdownContainer"] p,
         [data-testid="stAlertContainer"] [data-testid="stMarkdownContainer"] p {
-            color: #ffffff !important;
+            color: var(--ekt-ink) !important;
         }
         [data-testid="stMetric"] {
             padding: 1rem 1.1rem;
-            border: 1px solid rgba(148, 180, 255, 0.14);
+            border: 1px solid var(--ekt-border);
             border-radius: 14px;
-            background: var(--ekt-card);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+            background: #ffffff;
+            box-shadow: 0 8px 24px rgba(22, 44, 77, 0.06);
         }
-        [data-testid="stTabs"] [role="tab"] {
-            color: #b9c7e6;
+        [data-testid="stSidebar"] { border-right: 1px solid var(--ekt-border); }
+        .ekt-privacy {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.1rem;
+            margin: 0.5rem 0 1.6rem;
+            padding: clamp(1.1rem, 3vw, 1.7rem);
+            border: 1px solid #e3eaf2;
+            border-radius: 16px;
+            background: #f3f6fa;
+            box-shadow: 0 8px 24px rgba(22, 44, 77, 0.07);
         }
-        [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-            color: #ffffff;
-        }
+        .ekt-privacy-icon { flex: 0 0 auto; width: 2.5rem; color: #738397; }
+        .ekt-privacy h3 { margin: 0 0 0.35rem; color: var(--ekt-ink); font-size: 1.25rem; }
+        .ekt-privacy p { margin: 0; color: #3f4c5c; line-height: 1.55; }
         @media (max-width: 600px) {
             .block-container {
                 width: min(100% - 1.25rem, 1160px);
@@ -613,6 +662,14 @@ def main() -> None:
             .ekt-hero {
                 padding-top: 1rem;
             }
+            [data-testid="stTabs"] [data-baseweb="tab-list"] { gap: 0.15rem; }
+            [data-testid="stTabs"] [role="tab"] {
+                min-height: 2.9rem;
+                padding-inline: 0.55rem;
+                font-size: 0.92rem;
+            }
+            .ekt-privacy { gap: 0.8rem; }
+            .ekt-privacy-icon { width: 2rem; }
             .st-key-uploaded_image_preview [data-testid="stImage"] img {
                 max-height: min(55vh, 360px);
             }
@@ -627,7 +684,7 @@ def main() -> None:
         }
         .ekt-hero h1 {
             margin: 0;
-            color: #ffffff;
+            color: var(--ekt-ink);
             font-size: clamp(2rem, 4vw, 2.8rem);
             font-weight: 700;
             letter-spacing: -0.045em;
@@ -635,13 +692,13 @@ def main() -> None:
         .ekt-hero p {
             max-width: 760px;
             margin: 0.35rem 0 0;
-            color: #c5cee0;
+            color: var(--ekt-muted);
             font-size: 1rem;
         }
         .page-description {
             max-width: 920px;
             margin: 0.75rem 0 1.5rem;
-            color: #d2d9e8;
+            color: var(--ekt-muted);
             line-height: 1.7;
         }
         </style>
@@ -684,6 +741,15 @@ def main() -> None:
     )
 
     with analysis_tab:
+        st.markdown(
+            f'''<section class="ekt-privacy" role="note" aria-label="{text["privacy_title"]}">
+                <svg class="ekt-privacy-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                    <path d="M24 4 41 11v11c0 11-7.2 18.2-17 22C14.2 40.2 7 33 7 22V11L24 4Z" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
+                </svg>
+                <div><h3>{text["privacy_title"]}</h3><p>{text["privacy_body"]}</p></div>
+            </section>''',
+            unsafe_allow_html=True,
+        )
         with st.container(border=True):
             st.subheader(text["upload_heading"])
             st.caption(text["upload_guidance"])

@@ -422,15 +422,34 @@ class TestStreamlitInterface(unittest.TestCase):
             str(getattr(element, "value", "")) for element in app_test.markdown
         )
         for expected_style in (
-            "--ekt-navy: #0a1128",
+            "--ekt-navy: #f7f9fc",
             "--ekt-gradient",
             "[data-testid=\"stButton\"] > button",
             "[data-testid=\"stFileUploadDropzone\"]",
             "[data-testid=\"stAlert\"]",
+            ".ekt-privacy",
+            "overflow-x: auto",
             "font-family: 'Inter', sans-serif",
         ):
             with self.subTest(expected_style=expected_style):
                 self.assertIn(expected_style, injected_styles)
+
+    def test_privacy_notice_is_visible_in_each_supported_language(self) -> None:
+        expected_titles = {
+            "pt": "Privacidade e seguran\u00e7a",
+            "en": "Privacy and security",
+            "es": "Privacidad y seguridad",
+        }
+        for language, title in expected_titles.items():
+            with self.subTest(language=language):
+                app_test = AppTest.from_file(str(self.app_path)).run()
+                app_test.selectbox[0].select(language).run()
+                rendered_markdown = "\n".join(
+                    str(element.value) for element in app_test.markdown
+                )
+                self.assertIn(title, rendered_markdown)
+                self.assertIn("role=\"note\"", rendered_markdown)
+                self.assertEqual(len(app_test.exception), 0)
 
     def test_uploader_advertises_all_requested_extensions(self) -> None:
         app_test = AppTest.from_file(str(self.app_path)).run()
