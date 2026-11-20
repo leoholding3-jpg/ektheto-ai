@@ -428,6 +428,8 @@ class TestStreamlitInterface(unittest.TestCase):
             "[data-testid=\"stFileUploadDropzone\"]",
             "[data-testid=\"stAlert\"]",
             ".ekt-privacy",
+            ".ekt-howto",
+            ".ekt-file-info",
             "overflow-x: auto",
             "font-family: 'Inter', sans-serif",
         ):
@@ -450,6 +452,28 @@ class TestStreamlitInterface(unittest.TestCase):
                 self.assertIn(title, rendered_markdown)
                 self.assertIn("role=\"note\"", rendered_markdown)
                 self.assertEqual(len(app_test.exception), 0)
+
+    def test_how_it_works_is_available_in_all_supported_languages(self) -> None:
+        for language in ("pt", "en", "es"):
+            with self.subTest(language=language):
+                app_test = AppTest.from_file(str(self.app_path)).run()
+                app_test.selectbox[0].select(language).run()
+                self.assertEqual(app_test.expander[0].label, TEXT[language]["how_it_works"])
+                self.assertEqual(len(app_test.exception), 0)
+
+    def test_uploaded_image_shows_format_size_and_dimensions(self) -> None:
+        app_test = AppTest.from_file(str(self.app_path)).run()
+        app_test.file_uploader[0].upload("sample.png", make_image(), "image/png").run()
+        detail_cards = [
+            str(element.value)
+            for element in app_test.markdown
+            if 'class="ekt-file-info" role="group"' in str(element.value)
+        ]
+        self.assertEqual(len(detail_cards), 1)
+        self.assertIn("PNG", detail_cards[0])
+        self.assertIn("10 \u00d7 10", detail_cards[0])
+        self.assertIn("Tamanho do ficheiro", detail_cards[0])
+        self.assertEqual(len(app_test.exception), 0)
 
     def test_uploader_advertises_all_requested_extensions(self) -> None:
         app_test = AppTest.from_file(str(self.app_path)).run()

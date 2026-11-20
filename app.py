@@ -55,6 +55,17 @@ TEXT: dict[str, dict[str, str]] = {
         "history_tab": "Histórico da sessão",
         "upload_heading": "Imagem para análise",
         "upload_guidance": "A imagem só é enviada ao Sightengine quando selecionas Analisar imagem.",
+        "how_it_works": "Como funciona",
+        "step_choose": "Escolhe uma imagem",
+        "step_choose_help": "Carrega um JPG, PNG, WEBP ou BMP até 10 MB.",
+        "step_analyze": "Pede a análise",
+        "step_analyze_help": "A imagem só é enviada ao selecionar Analisar imagem.",
+        "step_result": "Lê o resultado",
+        "step_result_help": "Consulta os indicadores e confirma a origem por outras fontes.",
+        "image_details": "Detalhes da imagem",
+        "image_dimensions": "Dimensões",
+        "image_format": "Formato",
+        "image_size": "Tamanho do ficheiro",
         "privacy_title": "Privacidade e segurança",
         "privacy_body": (
             "A imagem só é enviada ao Sightengine quando selecionas Analisar. "
@@ -135,6 +146,17 @@ TEXT: dict[str, dict[str, str]] = {
         "history_tab": "Session history",
         "upload_heading": "Image for analysis",
         "upload_guidance": "The image is sent to Sightengine only when you select Analyze image.",
+        "how_it_works": "How it works",
+        "step_choose": "Choose an image",
+        "step_choose_help": "Upload a JPG, PNG, WEBP, or BMP up to 10 MB.",
+        "step_analyze": "Request an analysis",
+        "step_analyze_help": "The image is sent only when you select Analyze image.",
+        "step_result": "Review the result",
+        "step_result_help": "Check the indicators and verify the image with other sources.",
+        "image_details": "Image details",
+        "image_dimensions": "Dimensions",
+        "image_format": "Format",
+        "image_size": "File size",
         "privacy_title": "Privacy and security",
         "privacy_body": (
             "The image is sent to Sightengine only when you select Analyze. "
@@ -215,6 +237,17 @@ TEXT: dict[str, dict[str, str]] = {
         "history_tab": "Historial de sesión",
         "upload_heading": "Imagen para analizar",
         "upload_guidance": "La imagen solo se envía a Sightengine al seleccionar Analizar imagen.",
+        "how_it_works": "Cómo funciona",
+        "step_choose": "Elige una imagen",
+        "step_choose_help": "Carga un JPG, PNG, WEBP o BMP de hasta 10 MB.",
+        "step_analyze": "Solicita el análisis",
+        "step_analyze_help": "La imagen solo se envía al seleccionar Analizar imagen.",
+        "step_result": "Revisa el resultado",
+        "step_result_help": "Consulta los indicadores y verifica la imagen con otras fuentes.",
+        "image_details": "Detalles de la imagen",
+        "image_dimensions": "Dimensiones",
+        "image_format": "Formato",
+        "image_size": "Tamaño del archivo",
         "privacy_title": "Privacidad y seguridad",
         "privacy_body": (
             "La imagen solo se envía a Sightengine cuando seleccionas Analizar. "
@@ -653,6 +686,50 @@ def main() -> None:
         .ekt-privacy-icon { flex: 0 0 auto; width: 2.5rem; color: #738397; }
         .ekt-privacy h3 { margin: 0 0 0.35rem; color: var(--ekt-ink); font-size: 1.25rem; }
         .ekt-privacy p { margin: 0; color: #3f4c5c; line-height: 1.55; }
+        .ekt-howto {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 0.85rem;
+            margin: 0.25rem 0 0.5rem;
+        }
+        .ekt-step {
+            min-height: 8rem;
+            padding: 1rem;
+            border: 1px solid var(--ekt-border);
+            border-radius: 14px;
+            background: #ffffff;
+        }
+        .ekt-step-number {
+            display: inline-grid;
+            place-items: center;
+            width: 1.8rem;
+            height: 1.8rem;
+            margin-bottom: 0.55rem;
+            border-radius: 50%;
+            background: #eaf3ff;
+            color: var(--ekt-blue);
+            font-weight: 700;
+        }
+        .ekt-step h4 { margin: 0 0 0.25rem; color: var(--ekt-ink); font-size: 1rem; }
+        .ekt-step p { margin: 0; color: var(--ekt-muted); font-size: 0.92rem; line-height: 1.45; }
+        .ekt-file-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.6rem;
+            margin: -0.4rem 0 1rem;
+        }
+        .ekt-file-info span {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.65rem 0.8rem;
+            border: 1px solid var(--ekt-border);
+            border-radius: 10px;
+            background: #f7f9fc;
+            color: var(--ekt-muted);
+            font-size: 0.9rem;
+        }
+        .ekt-file-info strong { color: var(--ekt-ink); font-weight: 600; }
         @media (max-width: 600px) {
             .block-container {
                 width: min(100% - 1.25rem, 1160px);
@@ -736,6 +813,15 @@ def main() -> None:
         f'<p class="page-description">{text["description"]}</p>',
         unsafe_allow_html=True,
     )
+    with st.expander(text["how_it_works"], expanded=False):
+        st.markdown(
+            f'''<div class="ekt-howto" role="list">
+                <article class="ekt-step" role="listitem"><span class="ekt-step-number">1</span><h4>{text["step_choose"]}</h4><p>{text["step_choose_help"]}</p></article>
+                <article class="ekt-step" role="listitem"><span class="ekt-step-number">2</span><h4>{text["step_analyze"]}</h4><p>{text["step_analyze_help"]}</p></article>
+                <article class="ekt-step" role="listitem"><span class="ekt-step-number">3</span><h4>{text["step_result"]}</h4><p>{text["step_result_help"]}</p></article>
+            </div>''',
+            unsafe_allow_html=True,
+        )
     analysis_tab, news_tab, history_tab = st.tabs(
         [text["analysis_tab"], text["news_tab"], text["history_tab"]]
     )
@@ -766,6 +852,24 @@ def main() -> None:
                     validate_image_bytes(image_bytes)
                     with st.container(key="uploaded_image_preview"):
                         st.image(image_bytes, caption=uploaded_file.name, width="stretch")
+                    with Image.open(BytesIO(image_bytes)) as preview_image:
+                        preview_width, preview_height = preview_image.size
+                        preview_format = preview_image.format or "Imagem"
+                    preview_size = (
+                        f"{len(image_bytes)} B"
+                        if len(image_bytes) < 1024
+                        else f"{len(image_bytes) / 1024:.0f} KB"
+                        if len(image_bytes) < 1024 * 1024
+                        else f"{len(image_bytes) / (1024 * 1024):.2f} MB"
+                    )
+                    st.markdown(
+                        f'''<div class="ekt-file-info" role="group" aria-label="{text["image_details"]}">
+                            <span>{text["image_dimensions"]}<strong>{preview_width} \u00d7 {preview_height}</strong></span>
+                            <span>{text["image_format"]}<strong>{preview_format}</strong></span>
+                            <span>{text["image_size"]}<strong>{preview_size}</strong></span>
+                        </div>''',
+                        unsafe_allow_html=True,
+                    )
                 except ValueError as exc:
                     image_bytes = None
                     if str(exc) == "size":
