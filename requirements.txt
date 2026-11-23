@@ -1,6 +1,11 @@
+fastapi
+uvicorn[standard]
 python-dotenv
-truststore
+pydantic-settings
 requests
-streamlit
 pillow
-playwright>=1.65,<2
+python-multipart
+sqlalchemy[asyncio]
+asyncpg
+pyjwt[crypto]
+httpx

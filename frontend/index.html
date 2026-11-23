@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Ektheto — investiga cada detalhe." />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/assets/icon-192.png" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Ektheto</title>
+  </head>
+  <body>
+    <main>
+      <section id="cover" class="onboarding cover" aria-label="Ektheto">
+        <img class="cover-logo" src="/assets/zip-wordmark.png" alt="Ektheto" />
+        <img class="cover-art" src="/assets/zip-cover-art.jpg" alt="" />
+        <p>Expor o que é falso. Revelar o que é real.</p>
+        <button class="primary-button" type="button" data-onboarding="1">Continuar</button>
+      </section>
+
+      <section id="onboarding" class="onboarding" hidden>
+        <img class="onboarding-logo" src="/assets/zip-wordmark.png" alt="Ektheto" />
+        <img id="onboarding-image" class="onboarding-art" alt="" />
+        <h1 id="onboarding-title"></h1>
+        <p id="onboarding-copy"></p>
+        <div class="page-dots" aria-label="Passos de apresentação">
+          <span></span><span></span><span></span>
+        </div>
+        <button class="primary-button" id="onboarding-next" type="button">Seguinte</button>
+      </section>
+
+      <section id="app-shell" class="app-shell" hidden>
+        <header class="topbar">
+          <button class="wordmark" type="button" data-route="analisar" aria-label="Voltar para Analisar imagem">
+            <img src="/assets/zip-wordmark.png" alt="EKTHETO" />
+          </button>
+          <button class="menu-button" id="menu-button" type="button" aria-label="Abrir menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+        </header>
+        <nav id="menu" class="menu" aria-label="Menu" hidden></nav>
+        <div id="page-content" class="page-content"></div>
+      </section>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
