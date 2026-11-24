@@ -1,4 +1,4 @@
-const CACHE_NAME = "ektheto-v3-zip-design-v7-netlify";
+const CACHE_NAME = "ektheto-v3-zip-design-v8-netlify";
 const APP_SHELL = [
   "/",
   "/styles.css",

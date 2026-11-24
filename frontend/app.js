@@ -131,6 +131,7 @@ const translations = {
     "Voltar para a pesquisa": "Back to search",
     "Voltar para o histórico": "Back to history",
     "Voltar para Definições": "Back to Settings",
+    "Voltar para Ajuda": "Back to Help",
     "Voltar para o resultado": "Back to results",
     "Limpar histórico": "Clear history",
     "Limpar histórico?": "Clear history?",
@@ -146,6 +147,11 @@ const translations = {
     "Porque isto acontece": "Why this happens",
     "O que isto não prova": "What this does not prove",
     "Toca em Voltar para ver os outros itens.": "Tap Back to see the other items.",
+    "É uma estimativa, não uma prova. Confirma sempre com a fonte original.": "It is an estimate, not proof. Always check the original source.",
+    "Este resultado já não está disponível nesta sessão.": "This result is no longer available in this session.",
+    "Portugal · Partilha": "Portugal · Shared",
+    "Angola · Origem": "Angola · Source",
+    "Brasil · Distribuidor": "Brazil · Distributor",
     Idioma: "Language",
     "Como analisar uma imagem?": "How do I check an image?",
     "O que significa Ektheto?": "What does Ektheto mean?",
@@ -166,6 +172,91 @@ const translations = {
     "Português · Escolhe o idioma": "Portuguese · Choose a language",
     "English · Escolhe o idioma": "English · Choose a language",
     "Español · Escolhe o idioma": "Spanish · Choose a language",
+    "Expor o que é falso. Revelar o que é real.": "Expose what is false. Reveal what is real.",
+    "Ferramentas": "Tools",
+    Menu: "Menu",
+    "Passos de apresentação": "Introduction steps",
+    "Passos do tutorial": "Tutorial steps",
+    "Pré-visualização da imagem escolhida": "Preview of the selected image",
+    "Voltar para Analisar imagem": "Back to Analyze image",
+    "Abrir menu": "Open menu",
+    "Fechar menu": "Close menu",
+    "As verificações feitas nesta sessão.": "Checks completed in this session.",
+    "Resultado da pesquisa": "Analysis result",
+    "Resultado": "Result",
+    "sinais de geração por IA": "signs of AI generation",
+    "geração por IA": "AI generation",
+    "sinais de manipulação facial": "signs of facial manipulation",
+    "Manipulação facial": "Facial manipulation",
+    "manipulação facial": "facial manipulation",
+    "de confiança do modelo.": "model confidence.",
+    "Ver ou limpar o histórico": "View or clear history",
+    "O que vimos na imagem antes de dar o resultado.": "What we observed in the image before returning the result.",
+    "Seleciona uma imagem e faz a análise para ver os resultados.": "Select an image and run the analysis to see the results.",
+    "Um sinal sozinho pode enganar. O resultado é uma estimativa do modelo e deve ser interpretado com cuidado.": "A single signal can be misleading. The result is a model estimate and should be interpreted with care.",
+    "Não é uma prova. Pode haver falsos positivos. Confirma sempre com a fonte original.": "This is not proof. False positives are possible. Always check the original source.",
+    "Teste - Porquê?": "Test - Why?",
+    "Pele - Porquê?": "Skin - Why?",
+    "Luz - Porquê?": "Lighting - Why?",
+    "Fundo - Porquê?": "Background - Why?",
+    "Porque o teste completo cruza vários sinais antes de dar o resultado.": "The full check combines several signals before returning a result.",
+    "O resultado combina os indicadores fornecidos pelo modelo de análise.": "The result combines indicators provided by the analysis model.",
+    "Um sinal sozinho pode enganar. Em conjunto, os indicadores ajudam a avaliar padrões da imagem.": "A single signal can be misleading. Together, the indicators help assess image patterns.",
+    "A pele pode mostrar padrões que ajudam a interpretar uma imagem.": "Skin can show patterns that help interpret an image.",
+    "O modelo devolve uma estimativa geral; não mede a pele de forma isolada.": "The model returns an overall estimate; it does not assess skin in isolation.",
+    "Textura, contornos e pequenos detalhes podem parecer diferentes em imagens sintetizadas ou comprimidas.": "Texture, edges, and small details can look different in synthetic or compressed images.",
+    "A luz ajuda a perceber como os elementos da imagem se relacionam.": "Lighting helps show how elements in an image relate to one another.",
+    "A análise não fornece uma medição isolada da luz.": "The analysis does not provide a separate lighting measurement.",
+    "Sombras e reflexos podem dar contexto, mas também mudam com edição, câmara e compressão.": "Shadows and reflections can provide context, but they also change with editing, cameras, and compression.",
+    "O fundo também pode conter pistas importantes.": "The background may also contain useful clues.",
+    "A análise não fornece uma pontuação isolada para o fundo.": "The analysis does not provide a separate background score.",
+    "Padrões e objetos ao fundo podem parecer inconsistentes, mas isso não confirma por si só que uma imagem foi gerada por IA.": "Background patterns and objects may look inconsistent, but that alone does not confirm that an image was AI-generated.",
+    "Analisar uma imagem": "Analyze an image",
+    "Controlos do mapa": "Map controls",
+    "Cor do país": "Country color",
+    "Cor para pintar um país": "Color to fill a country",
+    "Cor do oceano": "Ocean color",
+    "Limpar mapa": "Reset map",
+    "Exportar SVG": "Export SVG",
+    "Mapa-múndi interativo. Clica ou toca num país para o colorir; usa a roda do rato para ampliar.": "Interactive world map. Click or tap a country to color it; use the mouse wheel to zoom.",
+    "A carregar mapa...": "Loading map...",
+    "Cores originais restauradas.": "Original colors restored.",
+    "Mapa exportado em SVG.": "Map exported as SVG.",
+    "Não foi possível exportar o mapa. Tenta novamente.": "Could not export the map. Try again.",
+    "Não foi possível carregar o mapa. Atualiza a página e tenta novamente.": "Could not load the map. Refresh the page and try again.",
+    "Escolhe uma imagem e toca em Analisar. A imagem é enviada apenas para fazer a verificação.": "Choose an image and tap Analyze. The image is sent only to run the check.",
+    "A Ektheto procura sinais na imagem e ajuda-te a investigar cada detalhe.": "Ektheto looks for signals in the image and helps you investigate the details.",
+    "1 · Escolher uma imagem": "1 · Choose an image",
+    "2 · Pedir a análise": "2 · Run the analysis",
+    "3 · Ler o resultado": "3 · Read the result",
+    "Na página Analisar imagem, toca na caixa da galeria ou arrasta a fotografia para lá. A pré-visualização mostra a imagem escolhida.": "On the Analyze image page, tap the gallery box or drag a photo into it. The preview shows the selected image.",
+    "Confirma que escolheste a imagem certa e toca em Analisar. A imagem é enviada ao serviço de análise apenas para esta verificação.": "Confirm that you selected the right image and tap Analyze. The image is sent to the analysis service only for this check.",
+    "Consulta a estimativa e abre Como foi feita a pesquisa para ver a explicação. Uma pontuação ajuda a investigar, mas não prova se a imagem é verdadeira ou falsa.": "Review the estimate and open How the check was done for an explanation. A score can help with an investigation, but it does not prove whether an image is real or fake.",
+    "Escolher da galeria": "Choose from gallery",
+    "Escolhe o idioma da Ektheto.": "Choose Ektheto's language.",
+    "A Ektheto ajuda a investigar sinais numa imagem. O resultado é uma estimativa e não prova autenticidade.": "Ektheto helps investigate signals in an image. The result is an estimate, not proof of authenticity.",
+    "Formato não suportado. Escolhe JPG, JPEG, PNG, WEBP ou BMP.": "Unsupported format. Choose JPG, JPEG, PNG, WEBP, or BMP.",
+    "A imagem excede o limite de 100 MB.": "The image exceeds the 100 MB limit.",
+    "A analisar…": "Analyzing…",
+    "A imagem está a ser analisada.": "The image is being analyzed.",
+    "O resultado é uma estimativa e não prova a autenticidade da imagem.": "The result is an estimate and does not prove the image's authenticity.",
+    "O resultado é uma estimativa do modelo e não prova autenticidade.": "The result is a model estimate and does not prove authenticity.",
+    "O serviço de análise ainda não está ligado. O backend Render precisa de ser publicado e configurado.": "The analysis service is not connected yet. The Render backend must be deployed and configured.",
+    "O servidor de análise não respondeu corretamente. Verifica se o backend Render está ativo.": "The analysis server returned an unexpected response. Check that the Render backend is running.",
+    "Não foi possível contactar o serviço de análise. Verifica a ligação e tenta novamente.": "Could not reach the analysis service. Check your connection and try again.",
+    "A análise ainda não está configurada neste servidor.": "Image analysis is not configured on this server yet.",
+    "O serviço de análise rejeitou as credenciais.": "The analysis service rejected its credentials.",
+    "O serviço de análise rejeitou o pedido.": "The analysis service rejected the request.",
+    "A resposta do serviço de análise não é válida.": "The analysis service returned an invalid response.",
+    "O limite de análises foi atingido. Tenta novamente mais tarde.": "The analysis limit was reached. Try again later.",
+    "O serviço está temporariamente indisponível.": "The service is temporarily unavailable.",
+    "A análise demorou demasiado. Tenta novamente.": "The analysis took too long. Try again.",
+    "Escolhe uma imagem antes de continuar.": "Choose an image before continuing.",
+    "A imagem excede a resolução máxima de 50 megapixels.": "The image exceeds the maximum resolution of 50 megapixels.",
+    "Este formato de imagem não é suportado.": "This image format is not supported.",
+    "Não foi possível validar a imagem. Experimenta outro ficheiro.": "Could not validate the image. Try another file.",
+    "Não foi possível concluir a análise. Tenta novamente.": "Could not complete the analysis. Try again.",
+    "Análise concluída": "Analysis complete",
   },
   Español: {
     Continuar: "Continuar",
@@ -251,6 +342,7 @@ const translations = {
     "Voltar para a pesquisa": "Volver a la búsqueda",
     "Voltar para o histórico": "Volver al historial",
     "Voltar para Definições": "Volver a Ajustes",
+    "Voltar para Ajuda": "Volver a Ayuda",
     "Voltar para o resultado": "Volver al resultado",
     "Limpar histórico": "Borrar historial",
     "Limpar histórico?": "¿Borrar el historial?",
@@ -266,6 +358,11 @@ const translations = {
     "Porque isto acontece": "Por qué ocurre",
     "O que isto não prova": "Qué no demuestra",
     "Toca em Voltar para ver os outros itens.": "Toca en Volver para ver los demás elementos.",
+    "É uma estimativa, não uma prova. Confirma sempre com a fonte original.": "Es una estimación, no una prueba. Confirma siempre con la fuente original.",
+    "Este resultado já não está disponível nesta sessão.": "Este resultado ya no está disponible en esta sesión.",
+    "Portugal · Partilha": "Portugal · Compartido",
+    "Angola · Origem": "Angola · Origen",
+    "Brasil · Distribuidor": "Brasil · Distribuidor",
     "Escolhe o idioma": "Elige el idioma",
     Idioma: "Idioma",
     "Como analisar uma imagem?": "¿Cómo analizar una imagen?",
@@ -287,6 +384,91 @@ const translations = {
     "Português · Escolhe o idioma": "Portugués · Elige el idioma",
     "English · Escolhe o idioma": "English · Elige el idioma",
     "Español · Escolhe o idioma": "Español · Elige el idioma",
+    "Expor o que é falso. Revelar o que é real.": "Exponer lo falso. Revelar lo real.",
+    "Ferramentas": "Herramientas",
+    Menu: "Menú",
+    "Passos de apresentação": "Pasos de presentación",
+    "Passos do tutorial": "Pasos del tutorial",
+    "Pré-visualização da imagem escolhida": "Vista previa de la imagen seleccionada",
+    "Voltar para Analisar imagem": "Volver a Analizar imagen",
+    "Abrir menu": "Abrir menú",
+    "Fechar menu": "Cerrar menú",
+    "As verificações feitas nesta sessão.": "Comprobaciones realizadas en esta sesión.",
+    "Resultado da pesquisa": "Resultado del análisis",
+    "Resultado": "Resultado",
+    "sinais de geração por IA": "señales de generación por IA",
+    "geração por IA": "generación por IA",
+    "sinais de manipulação facial": "señales de manipulación facial",
+    "Manipulação facial": "Manipulación facial",
+    "manipulação facial": "manipulación facial",
+    "de confiança do modelo.": "de confianza del modelo.",
+    "Ver ou limpar o histórico": "Ver o borrar el historial",
+    "O que vimos na imagem antes de dar o resultado.": "Lo que observamos en la imagen antes de dar el resultado.",
+    "Seleciona uma imagem e faz a análise para ver os resultados.": "Selecciona una imagen y analiza para ver los resultados.",
+    "Um sinal sozinho pode enganar. O resultado é uma estimativa do modelo e deve ser interpretado com cuidado.": "Una señal por sí sola puede engañar. El resultado es una estimación del modelo y debe interpretarse con cuidado.",
+    "Não é uma prova. Pode haver falsos positivos. Confirma sempre com a fonte original.": "No es una prueba. Puede haber falsos positivos. Confirma siempre con la fuente original.",
+    "Teste - Porquê?": "Prueba: ¿por qué?",
+    "Pele - Porquê?": "Piel: ¿por qué?",
+    "Luz - Porquê?": "Luz: ¿por qué?",
+    "Fundo - Porquê?": "Fondo: ¿por qué?",
+    "Porque o teste completo cruza vários sinais antes de dar o resultado.": "La comprobación completa combina varias señales antes de dar un resultado.",
+    "O resultado combina os indicadores fornecidos pelo modelo de análise.": "El resultado combina los indicadores proporcionados por el modelo de análisis.",
+    "Um sinal sozinho pode enganar. Em conjunto, os indicadores ajudam a avaliar padrões da imagem.": "Una señal por sí sola puede engañar. En conjunto, los indicadores ayudan a evaluar patrones de la imagen.",
+    "A pele pode mostrar padrões que ajudam a interpretar uma imagem.": "La piel puede mostrar patrones que ayudan a interpretar una imagen.",
+    "O modelo devolve uma estimativa geral; não mede a pele de forma isolada.": "El modelo devuelve una estimación general; no analiza la piel de forma aislada.",
+    "Textura, contornos e pequenos detalhes podem parecer diferentes em imagens sintetizadas ou comprimidas.": "La textura, los contornos y los pequeños detalles pueden verse distintos en imágenes sintéticas o comprimidas.",
+    "A luz ajuda a perceber como os elementos da imagem se relacionam.": "La luz ayuda a entender cómo se relacionan los elementos de la imagen.",
+    "A análise não fornece uma medição isolada da luz.": "El análisis no ofrece una medición aislada de la luz.",
+    "Sombras e reflexos podem dar contexto, mas também mudam com edição, câmara e compressão.": "Las sombras y los reflejos aportan contexto, pero también cambian con la edición, la cámara y la compresión.",
+    "O fundo também pode conter pistas importantes.": "El fondo también puede contener pistas importantes.",
+    "A análise não fornece uma pontuação isolada para o fundo.": "El análisis no ofrece una puntuación aislada del fondo.",
+    "Padrões e objetos ao fundo podem parecer inconsistentes, mas isso não confirma por si só que uma imagem foi gerada por IA.": "Los patrones y objetos del fondo pueden parecer inconsistentes, pero eso no confirma por sí solo que una imagen haya sido generada por IA.",
+    "Analisar uma imagem": "Analizar una imagen",
+    "Controlos do mapa": "Controles del mapa",
+    "Cor do país": "Color del país",
+    "Cor para pintar um país": "Color para rellenar un país",
+    "Cor do oceano": "Color del océano",
+    "Limpar mapa": "Restablecer mapa",
+    "Exportar SVG": "Exportar SVG",
+    "Mapa-múndi interativo. Clica ou toca num país para o colorir; usa a roda do rato para ampliar.": "Mapa mundial interactivo. Haz clic o toca un país para colorearlo; usa la rueda del ratón para ampliar.",
+    "A carregar mapa...": "Cargando mapa...",
+    "Cores originais restauradas.": "Se restauraron los colores originales.",
+    "Mapa exportado em SVG.": "Mapa exportado como SVG.",
+    "Não foi possível exportar o mapa. Tenta novamente.": "No se pudo exportar el mapa. Inténtalo de nuevo.",
+    "Não foi possível carregar o mapa. Atualiza a página e tenta novamente.": "No se pudo cargar el mapa. Actualiza la página e inténtalo de nuevo.",
+    "Escolhe uma imagem e toca em Analisar. A imagem é enviada apenas para fazer a verificação.": "Elige una imagen y toca Analizar. La imagen se envía únicamente para realizar la comprobación.",
+    "A Ektheto procura sinais na imagem e ajuda-te a investigar cada detalhe.": "Ektheto busca señales en la imagen y te ayuda a investigar cada detalle.",
+    "1 · Escolher uma imagem": "1 · Elegir una imagen",
+    "2 · Pedir a análise": "2 · Solicitar el análisis",
+    "3 · Ler o resultado": "3 · Leer el resultado",
+    "Na página Analisar imagem, toca na caixa da galeria ou arrasta a fotografia para lá. A pré-visualização mostra a imagem escolhida.": "En la página Analizar imagen, toca el cuadro de la galería o arrastra una foto hasta allí. La vista previa muestra la imagen seleccionada.",
+    "Confirma que escolheste a imagem certa e toca em Analisar. A imagem é enviada ao serviço de análise apenas para esta verificação.": "Confirma que elegiste la imagen correcta y toca Analizar. La imagen se envía al servicio de análisis solo para esta comprobación.",
+    "Consulta a estimativa e abre Como foi feita a pesquisa para ver a explicação. Uma pontuação ajuda a investigar, mas não prova se a imagem é verdadeira ou falsa.": "Consulta la estimación y abre Cómo se hizo la comprobación para ver la explicación. Una puntuación ayuda a investigar, pero no demuestra si la imagen es verdadera o falsa.",
+    "Escolher da galeria": "Elegir de la galería",
+    "Escolhe o idioma da Ektheto.": "Elige el idioma de Ektheto.",
+    "A Ektheto ajuda a investigar sinais numa imagem. O resultado é uma estimativa e não prova autenticidade.": "Ektheto ayuda a investigar señales en una imagen. El resultado es una estimación y no demuestra autenticidad.",
+    "Formato não suportado. Escolhe JPG, JPEG, PNG, WEBP ou BMP.": "Formato no compatible. Elige JPG, JPEG, PNG, WEBP o BMP.",
+    "A imagem excede o limite de 100 MB.": "La imagen supera el límite de 100 MB.",
+    "A analisar…": "Analizando…",
+    "A imagem está a ser analisada.": "Se está analizando la imagen.",
+    "O resultado é uma estimativa e não prova a autenticidade da imagem.": "El resultado es una estimación y no demuestra la autenticidad de la imagen.",
+    "O resultado é uma estimativa do modelo e não prova autenticidade.": "El resultado es una estimación del modelo y no demuestra autenticidad.",
+    "O serviço de análise ainda não está ligado. O backend Render precisa de ser publicado e configurado.": "El servicio de análisis aún no está conectado. Hay que publicar y configurar el backend de Render.",
+    "O servidor de análise não respondeu corretamente. Verifica se o backend Render está ativo.": "El servidor de análisis devolvió una respuesta inesperada. Comprueba que el backend de Render esté activo.",
+    "Não foi possível contactar o serviço de análise. Verifica a ligação e tenta novamente.": "No se pudo contactar con el servicio de análisis. Comprueba la conexión e inténtalo de nuevo.",
+    "A análise ainda não está configurada neste servidor.": "El análisis de imágenes aún no está configurado en este servidor.",
+    "O serviço de análise rejeitou as credenciais.": "El servicio de análisis rechazó las credenciales.",
+    "O serviço de análise rejeitou o pedido.": "El servicio de análisis rechazó la solicitud.",
+    "A resposta do serviço de análise não é válida.": "El servicio de análisis devolvió una respuesta no válida.",
+    "O limite de análises foi atingido. Tenta novamente mais tarde.": "Se alcanzó el límite de análisis. Inténtalo más tarde.",
+    "O serviço está temporariamente indisponível.": "El servicio no está disponible temporalmente.",
+    "A análise demorou demasiado. Tenta novamente.": "El análisis tardó demasiado. Inténtalo de nuevo.",
+    "Escolhe uma imagem antes de continuar.": "Elige una imagen antes de continuar.",
+    "A imagem excede a resolução máxima de 50 megapixels.": "La imagen supera la resolución máxima de 50 megapíxeles.",
+    "Este formato de imagem não é suportado.": "Este formato de imagen no es compatible.",
+    "Não foi possível validar a imagem. Experimenta outro ficheiro.": "No se pudo validar la imagen. Prueba con otro archivo.",
+    "Não foi possível concluir a análise. Tenta novamente.": "No se pudo completar el análisis. Inténtalo de nuevo.",
+    "Análise concluída": "Análisis completado",
   },
 };
 
@@ -296,6 +478,28 @@ let selectedFile = null;
 let previewUrl = null;
 let tutorialStep = 0;
 const MAX_IMAGE_BYTES = 100 * 1024 * 1024;
+const LANGUAGE_KEY = "ektheto-language";
+const LANGUAGE_OPTIONS = ["Português", "English", "Español"];
+const originalText = new WeakMap();
+const originalAttributes = new WeakMap();
+const translatableAttributes = ["alt", "aria-label", "placeholder", "title"];
+
+function getLanguage() {
+  const savedLanguage = localStorage.getItem(LANGUAGE_KEY)
+    || sessionStorage.getItem(LANGUAGE_KEY);
+  if (LANGUAGE_OPTIONS.includes(savedLanguage) && !localStorage.getItem(LANGUAGE_KEY)) {
+    localStorage.setItem(LANGUAGE_KEY, savedLanguage);
+  }
+  return LANGUAGE_OPTIONS.includes(savedLanguage) ? savedLanguage : "Português";
+}
+
+function getDateLocale() {
+  return {
+    Português: "pt-PT",
+    English: "en-GB",
+    Español: "es-ES",
+  }[getLanguage()];
+}
 
 function getHistory() {
   try {
@@ -361,7 +565,7 @@ menu.addEventListener("click", (event) => {
 document.querySelector(".wordmark").addEventListener("click", () => showApp("analisar"));
 
 function pageHeading(title, back = "analisar", backText = "Voltar para a pesquisa") {
-  return `<button class="back-link" type="button" data-route="${back}">‹ ${backText}</button><h1>${title}</h1>`;
+  return `<button class="back-link" type="button" data-route="${back}"><span aria-hidden="true">‹</span>&nbsp;<span>${backText}</span></button><h1>${title}</h1>`;
 }
 
 function renderTools() {
@@ -376,8 +580,8 @@ function renderAnalyze() {
   const resultHtml = result ? `
     <section class="result-preview" aria-live="polite">
       <h2>${escapeHtml(result.verdictText)}</h2>
-      <p class="result-score">${Math.round(result.score * 100)}% sinais de geração por IA</p>
-      ${result.deepfakeScore == null ? "" : `<p>${Math.round(result.deepfakeScore * 100)}% sinais de manipulação facial</p>`}
+      <p class="result-score">${Math.round(result.score * 100)}% <span>sinais de geração por IA</span></p>
+      ${result.deepfakeScore == null ? "" : `<p>${Math.round(result.deepfakeScore * 100)}% <span>sinais de manipulação facial</span></p>`}
       <button class="secondary-button" type="button" data-route="resultado-${result.id}">Como foi feita a pesquisa</button>
     </section>` : "";
   pageContent.innerHTML = `
@@ -585,7 +789,7 @@ function renderHistory() {
   const items = getHistory();
   const list = items.length ? items.map((item) => `
     <button class="history-item" type="button" data-route="resultado-${item.id}">
-      <span><strong>${escapeHtml(item.name)}</strong><small>${new Date(item.createdAt).toLocaleString()}</small></span>
+      <span><strong>${escapeHtml(item.name)}</strong><small>${new Date(item.createdAt).toLocaleString(getDateLocale())}</small></span>
       <span class="history-result">${Math.round(item.score * 100)}%</span>
     </button>`).join("") : '<p class="empty-state">Ainda não fizeste nenhuma pesquisa nesta sessão.</p>';
   pageContent.innerHTML = `
@@ -615,11 +819,14 @@ function renderDeleteHistory() {
 function renderWhy(result) {
   const score = result ? Math.round(result.score * 100) : null;
   const deepfake = result?.deepfakeScore == null ? null : Math.round(result.deepfakeScore * 100);
+  const conjunction = { Português: "e", English: "and", Español: "y" }[getLanguage()];
   pageContent.innerHTML = `
     <section class="page">
       ${pageHeading("Como foi feita a pesquisa", "resultado-" + (result?.id || ""), "Voltar para o resultado")}
       <p class="page-intro">O que vimos na imagem antes de dar o resultado.</p>
-      <article class="info-card"><h2>O que a Ektheto viu</h2><p>${score == null ? "Seleciona uma imagem e faz a análise para ver os resultados." : `Resultado ${score}% geração por IA${deepfake == null ? "" : ` e ${deepfake}% manipulação facial`}.`}</p></article>
+      <article class="info-card"><h2>O que a Ektheto viu</h2><p>${score == null
+    ? "Seleciona uma imagem e faz a análise para ver os resultados."
+    : `<span>Resultado</span> ${score}% <span>geração por IA</span>${deepfake == null ? "." : ` <span>${conjunction}</span> ${deepfake}% <span>manipulação facial</span>.`}`}</p></article>
       <article class="info-card"><h2>Porque isto acontece</h2><p>Um sinal sozinho pode enganar. O resultado é uma estimativa do modelo e deve ser interpretado com cuidado.</p></article>
       <article class="info-card"><h2>O que isto não prova</h2><p>Não é uma prova. Pode haver falsos positivos. Confirma sempre com a fonte original.</p></article>
       <div class="detail-links">
@@ -682,8 +889,8 @@ function renderResult(id) {
     <section class="page">
       ${pageHeading("Resultado da pesquisa", "analisar", "Voltar para a pesquisa")}
       <p class="page-intro">${escapeHtml(result.name)}</p>
-      <article class="info-card"><h2>${escapeHtml(result.verdictText)}</h2><p class="result-score">${Math.round(result.score * 100)}% sinais de geração por IA</p></article>
-      ${result.deepfakeScore == null ? "" : `<article class="info-card"><h2>Manipulação facial</h2><p>${Math.round(result.deepfakeScore * 100)}% de confiança do modelo.</p></article>`}
+      <article class="info-card"><h2>${escapeHtml(result.verdictText)}</h2><p class="result-score">${Math.round(result.score * 100)}% <span>sinais de geração por IA</span></p></article>
+      ${result.deepfakeScore == null ? "" : `<article class="info-card"><h2>Manipulação facial</h2><p>${Math.round(result.deepfakeScore * 100)}% <span>de confiança do modelo.</span></p></article>`}
       ${renderImageMetadata(result.metadata)}
       ${renderGeminiAssessment(result.gemini)}
       ${renderSourceSearch(result.gemini)}
@@ -927,7 +1134,7 @@ function renderTutorial(step = tutorialStep) {
   pageContent.innerHTML = `
     <section class="page tutorial-page">
       ${pageHeading("Tutorial", "ajuda", "Voltar para Ajuda")}
-      <p class="tutorial-progress">Passo ${tutorialStep + 1} de ${steps.length}</p>
+      <p class="tutorial-progress"><span>Passo</span> ${tutorialStep + 1} <span>de</span> ${steps.length}</p>
       <div class="page-dots" aria-label="Passos do tutorial">${steps.map((_, index) => `<span class="${index === tutorialStep ? "active" : ""}"></span>`).join("")}</div>
       <article class="tutorial-card">
         <h2>${current.title}</h2>
@@ -956,14 +1163,14 @@ function renderSettings() {
   pageContent.innerHTML = `
     <section class="page">
       ${pageHeading("Definições")}
-      <button class="settings-item" type="button" data-route="idioma"><strong>Idioma</strong><span>${sessionStorage.getItem("ektheto-language") || "Português"} · Escolhe o idioma</span></button>
+      <button class="settings-item" type="button" data-route="idioma"><strong>Idioma</strong><span>${getLanguage()} · Escolhe o idioma</span></button>
       <button class="settings-item" type="button" data-route="historico"><strong>Histórico da sessão</strong><span>Ver ou limpar o histórico</span></button>
       <button class="primary-button page-action" type="button" data-route="analisar">Voltar para Analisar imagem</button>
     </section>`;
 }
 
 function renderLanguage() {
-  const current = sessionStorage.getItem("ektheto-language") || "Português";
+  const current = getLanguage();
   pageContent.innerHTML = `
     <section class="page">
       ${pageHeading("Idioma", "definicoes", "Voltar para Definições")}
@@ -1000,26 +1207,49 @@ function renderPage(route) {
 }
 
 function applyTranslations() {
-  const locale = sessionStorage.getItem("ektheto-language") || "Português";
+  const locale = getLanguage();
   document.documentElement.lang = locale === "English" ? "en" : locale === "Español" ? "es" : "pt";
   const dictionary = translations[locale];
-  const reverse = new Map();
-  Object.values(translations).forEach((language) => {
-    Object.entries(language).forEach(([source, translated]) => {
-      reverse.set(translated, source);
-    });
-  });
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    const value = node.nodeValue.trim();
-    const source = reverse.get(value) || value;
-    const translated = dictionary ? dictionary[source] || source : source;
-    if (translated !== value) {
-      node.nodeValue = node.nodeValue.replace(value, translated);
-    }
-  }
+  translateSubtree(document.body, dictionary);
 }
+
+function translateSubtree(node, dictionary) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    if (!originalText.has(node)) originalText.set(node, node.nodeValue);
+    const source = originalText.get(node);
+    const translated = dictionary?.[source] || source;
+    if (node.nodeValue !== translated) node.nodeValue = translated;
+    return;
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+  let sourceAttributes = originalAttributes.get(node);
+  if (!sourceAttributes) {
+    sourceAttributes = new Map();
+    originalAttributes.set(node, sourceAttributes);
+  }
+  for (const attribute of translatableAttributes) {
+    const value = node.getAttribute(attribute);
+    if (value === null) continue;
+    if (!sourceAttributes.has(attribute)) sourceAttributes.set(attribute, value);
+    const source = sourceAttributes.get(attribute);
+    const translated = dictionary?.[source] || source;
+    if (value !== translated) node.setAttribute(attribute, translated);
+  }
+  for (const child of node.childNodes) translateSubtree(child, dictionary);
+}
+
+const translationObserver = new MutationObserver((mutations) => {
+  const dictionary = translations[getLanguage()];
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) translateSubtree(node, dictionary);
+  }
+});
+translationObserver.observe(document.body, { childList: true, subtree: true });
+
+window.addEventListener("storage", (event) => {
+  if (event.key === LANGUAGE_KEY) applyTranslations();
+});
 
 pageContent.addEventListener("click", (event) => {
   const searchSourcesButton = event.target.closest('[data-action="search-sources"]');
@@ -1048,7 +1278,7 @@ pageContent.addEventListener("click", (event) => {
   }
   const languageButton = event.target.closest("[data-language]");
   if (languageButton) {
-    sessionStorage.setItem("ektheto-language", languageButton.dataset.language);
+    localStorage.setItem(LANGUAGE_KEY, languageButton.dataset.language);
     showApp("idioma");
     return;
   }
@@ -1134,7 +1364,7 @@ async function analyzeSelectedImage(event) {
   const body = new FormData();
   body.append("file", selectedFile);
   body.append("use_gemini", String(Boolean(document.querySelector("#gemini-consent")?.checked)));
-  const locale = sessionStorage.getItem("ektheto-language") || "Português";
+  const locale = getLanguage();
   body.append("language", locale === "English" ? "en" : locale === "Español" ? "es" : "pt");
   try {
     if (!API_BASE_URL) throw new Error("api_not_configured");
@@ -1168,20 +1398,21 @@ async function analyzeSelectedImage(event) {
     if (currentResult) {
       const disclaimer = document.createElement("p");
       disclaimer.className = "result-disclaimer";
-      disclaimer.textContent = payload.disclaimer || "O resultado é uma estimativa e não prova a autenticidade da imagem.";
+      disclaimer.textContent = "O resultado é uma estimativa do modelo e não prova autenticidade.";
       currentResult.append(disclaimer);
     }
   } catch (error) {
     const messages = {
       api_not_configured: "O serviço de análise ainda não está ligado. O backend Render precisa de ser publicado e configurado.",
       api_unavailable: "O servidor de análise não respondeu corretamente. Verifica se o backend Render está ativo.",
-      network: "Não foi possível contactar o serviço de análise. Verifica a ligação e tenta novamente.",
       analysis_not_configured: "A análise ainda não está configurada neste servidor.",
       credentials: "O serviço de análise rejeitou as credenciais.",
+      provider: "O serviço de análise rejeitou o pedido.",
+      invalid_response: "A resposta do serviço de análise não é válida.",
       rate_limit: "O limite de análises foi atingido. Tenta novamente mais tarde.",
       unavailable: "O serviço está temporariamente indisponível.",
       timeout: "A análise demorou demasiado. Tenta novamente.",
-      network: "Não foi possível contactar o serviço de análise.",
+      network: "Não foi possível contactar o serviço de análise. Verifica a ligação e tenta novamente.",
       empty: "Escolhe uma imagem antes de continuar.",
       size: "A imagem excede o limite de 100 MB.",
       dimensions: "A imagem excede a resolução máxima de 50 megapixels.",
@@ -1214,6 +1445,7 @@ if (location.hash) {
 } else {
   cover.hidden = false;
 }
+applyTranslations();
 
 window.addEventListener("hashchange", () => {
   const route = decodeURIComponent(location.hash.slice(1));
