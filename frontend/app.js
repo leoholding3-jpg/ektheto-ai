@@ -1,3 +1,4 @@
+const IS_LOCAL_HOST = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 const API_BASE_URL = typeof window.EKTHETO_API_BASE_URL === "string"
   ? window.EKTHETO_API_BASE_URL.trim().replace(/\/+$/, "")
   : "";
@@ -1373,7 +1374,7 @@ async function analyzeSelectedImage(event) {
   const locale = getLanguage();
   body.append("language", locale === "English" ? "en" : locale === "Español" ? "es" : "pt");
   try {
-    if (!API_BASE_URL) throw new Error("api_not_configured");
+    if (!API_BASE_URL && !IS_LOCAL_HOST) throw new Error("api_not_configured");
     const response = await fetch(apiUrl("/api/analyze"), { method: "POST", body });
     let payload;
     try {

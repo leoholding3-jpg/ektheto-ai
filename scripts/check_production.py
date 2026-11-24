@@ -29,7 +29,10 @@ def check_render_health() -> None:
         raise RuntimeError(
             "Render is reachable, but SIGHTENGINE_USER or SIGHTENGINE_SECRET is missing"
         )
-    print("PASS: Render API is healthy and image-analysis credentials are configured")
+    print(
+        "PASS: Render API is healthy and Sightengine variables are present; "
+        "provider credentials were not validated"
+    )
 
 
 def check_netlify_cors() -> None:
