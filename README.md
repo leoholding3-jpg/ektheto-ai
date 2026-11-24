@@ -69,6 +69,12 @@ reliable production plan. Netlify's subdomain is free if available; a custom
 `.com` domain must be registered and paid for separately. Netlify builds from
 the connected GitHub branch when changes are pushed.
 
+To diagnose the live connection after a deployment, run **Production smoke
+check** from the repository's GitHub Actions tab. It checks Render health,
+presence of the Sightengine configuration, Netlify CORS, and the frontend API
+URL. It does not expose credentials or call Sightengine; credential validity
+still requires a real analysis request.
+
 Free hosting does not make third-party analysis free: check the current usage
 limits and billing terms for Sightengine, Gemini and optional news providers.
 

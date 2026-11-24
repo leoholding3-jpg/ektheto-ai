@@ -19,9 +19,26 @@ def make_image() -> bytes:
 
 
 def test_health():
-    response = client.get("/api/health")
+    with (
+        patch.object(settings, "sightengine_user", "configured-user"),
+        patch.object(settings, "sightengine_secret", "configured-secret"),
+    ):
+        response = client.get("/api/health")
+
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+    assert response.json()["image_analysis_configured"] is True
+
+
+def test_health_reports_missing_image_analysis_configuration():
+    with (
+        patch.object(settings, "sightengine_user", ""),
+        patch.object(settings, "sightengine_secret", ""),
+    ):
+        response = client.get("/api/health")
+
+    assert response.status_code == 200
+    assert response.json()["image_analysis_configured"] is False
 
 
 def test_news_tool_schema_is_available():

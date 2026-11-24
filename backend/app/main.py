@@ -87,6 +87,9 @@ async def health():
     return {
         "status": "ok",
         "environment": settings.environment,
+        "image_analysis_configured": bool(
+            settings.sightengine_user and settings.sightengine_secret
+        ),
     }
 
 
