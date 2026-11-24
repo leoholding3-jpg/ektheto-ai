@@ -56,17 +56,18 @@ availability in the Netlify account. `netlify.toml` publishes the `frontend/`
 directory without a build step. Create the Netlify site from the GitHub
 repository and confirm the publish directory is `frontend`.
 
-The FastAPI backend remains a separate Render service. After deploying it,
-set `window.EKTHETO_API_BASE_URL` in `frontend/config.js` to the backend's
-public HTTPS URL, for example `https://<service-name>.onrender.com`, and
-redeploy the frontend. The Render `CORS_ORIGINS` setting already includes the
-selected Netlify origin; change it if Netlify assigns a different URL.
+The FastAPI backend runs as a separate Render service.
+`frontend/config.js` points deployed frontends to
+`https://ektheto-api.onrender.com` and keeps the API same-origin for local
+development. Update that URL if the Render service address changes. The
+Render `CORS_ORIGINS` setting includes `https://ektheto.netlify.app`; change
+it if Netlify assigns a different URL.
 
 `render.yaml` uses Render's **Free** web-service plan for preview/testing.
 Free services can sleep when idle and cold-start slowly, so this is not a
 reliable production plan. Netlify's subdomain is free if available; a custom
-`.com` domain must be registered and paid for separately. No Netlify site or
-Render deployment has been created from this workspace.
+`.com` domain must be registered and paid for separately. Netlify builds from
+the connected GitHub branch when changes are pushed.
 
 Free hosting does not make third-party analysis free: check the current usage
 limits and billing terms for Sightengine, Gemini and optional news providers.

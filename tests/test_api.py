@@ -241,7 +241,8 @@ def test_frontend_is_served():
     assert response.content.index(b"/config.js") < response.content.index(b"/app.js")
     config = client.get("/config.js")
     assert config.status_code == 200
-    assert b'window.EKTHETO_API_BASE_URL = "";' in config.content
+    assert b'"localhost", "127.0.0.1"' in config.content
+    assert b"https://ektheto-api.onrender.com" in config.content
     assert b"auth-dialog" not in response.content
     assert b"account-button" not in response.content
     assert client.get("/api/config/public").status_code == 404
