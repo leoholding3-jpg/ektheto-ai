@@ -16,11 +16,10 @@ venv/
 .test-tmp/
 test-temp/
 
-# Generated frontend output from the retired React app
+# Generated frontend output
 node_modules/
 dist/
 build/
 coverage/
 *.log
 .DS_Store
-node_modules

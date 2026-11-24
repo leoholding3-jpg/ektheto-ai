@@ -5,7 +5,4 @@ pydantic-settings
 requests
 pillow
 python-multipart
-sqlalchemy[asyncio]
-asyncpg
-pyjwt[crypto]
 httpx

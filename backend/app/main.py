@@ -1,45 +1,26 @@
-from pathlib import Path
+import asyncio
 import uuid
-from datetime import date
+from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi import Request
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from fastapi.exception_handlers import http_exception_handler
-from fastapi import HTTPException
-from fastapi.middleware import Middleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from sqlalchemy import text
 
 from .analyzer import (
     MAX_IMAGE_BYTES,
     AnalysisError,
     analyze_image,
     classify_score,
+    extract_image_metadata,
 )
-from .auth import get_current_user
 from .config import get_settings
-from .database import engine, get_db
-from .nasa import (
-    NASA_TOOLS_SCHEMA,
-    NasaServiceError,
-    buscar_asteroides_proximos,
-    execute_nasa_tool,
-    obter_foto_astronomia_do_dia,
-)
+from .gemini import GeminiServiceError, analyze_image_with_gemini
+from .image_sources import ImageSourceError, search_commons_images
 from .news import NEWS_TOOLS_SCHEMA, NewsServiceError, execute_news_tool, pesquisar_noticias_na_hora
-from .schemas import (
-    InvestigationCreate,
-    IntegrationUpdate,
-    NasaToolInvocation,
-    NewsSearchRequest,
-    NewsToolInvocation,
-    SettingUpdate,
-)
+from .schemas import ImageInvestigationSourcesRequest, NewsSearchRequest, NewsToolInvocation
 from .bug_registry import record_bug, bug_registry_middleware
 
 settings = get_settings()
@@ -61,6 +42,14 @@ app.add_middleware(
 )
 
 
+def _request_id(request: Request) -> str:
+    return (
+        request.headers.get("x-request-id")
+        or getattr(request.state, "request_id", None)
+        or str(uuid.uuid4())
+    )
+
+
 @app.middleware("http")
 async def bug_middleware(request: Request, call_next):
     return await bug_registry_middleware(request, call_next)
@@ -68,6 +57,11 @@ async def bug_middleware(request: Request, call_next):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = jsonable_encoder(exc.errors())
+    log_errors = [
+        {key: value for key, value in error.items() if key not in {"input", "ctx"}}
+        for error in errors
+    ]
     request_id = (
         request.headers.get("x-request-id")
         or getattr(request.state, "request_id", None)
@@ -77,77 +71,23 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         method=request.method,
         path=request.url.path,
         status=422,
-        detail={"errors": exc.errors()},
+        detail={"errors": log_errors},
         exception_type="RequestValidationError",
         request_id=request_id,
     )
     request.state.bug_recorded = True
     return JSONResponse(
         status_code=422,
-        content={"detail": exc.errors(), "request_id": request_id},
+        content={"detail": errors, "request_id": request_id},
     )
 
 
 @app.get("/api/health")
 async def health():
-    database = "not_configured"
-    if engine is not None:
-        try:
-            async with engine.connect() as connection:
-                await connection.execute(text("select 1"))
-            database = "ok"
-        except Exception:
-            database = "error"
     return {
         "status": "ok",
         "environment": settings.environment,
-        "database": database,
     }
-
-
-@app.get("/api/config/public")
-async def public_config():
-    return {
-        "supabase_url": settings.supabase_url,
-        "supabase_anon_key": settings.supabase_anon_key,
-    }
-
-
-@app.get("/api/nasa/tools")
-async def nasa_tools():
-    return NASA_TOOLS_SCHEMA
-
-
-@app.get("/api/nasa/apod")
-async def nasa_apod(apod_date: date | None = Query(default=None, alias="date")):
-    try:
-        return await obter_foto_astronomia_do_dia(settings.nasa_api_key, apod_date)
-    except NasaServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
-
-
-@app.get("/api/nasa/asteroids")
-async def nasa_asteroids(start_date: date, end_date: date):
-    try:
-        return await buscar_asteroides_proximos(
-            settings.nasa_api_key,
-            start_date,
-            end_date,
-        )
-    except NasaServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
-
-
-@app.post("/api/nasa/tools/execute")
-async def nasa_tool(payload: NasaToolInvocation):
-    try:
-        return await execute_nasa_tool(
-            payload.name,
-            payload.arguments,
-            settings.nasa_api_key,
-        )
-    except NasaServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 async def _record_news_provider_errors(request: Request, result: dict):
@@ -160,7 +100,7 @@ async def _record_news_provider_errors(request: Request, result: dict):
         "servico_indisponivel": 502,
         "resposta_invalida": 502,
     }
-    request_id = request.headers.get("x-request-id") or str(uuid.uuid4())
+    request_id = _request_id(request)
     for provider, outcome in result["provedores"].items():
         if outcome["estado"] != "erro":
             continue
@@ -193,6 +133,52 @@ async def news_search(payload: NewsSearchRequest, request: Request):
     return result
 
 
+@app.post("/api/investigation/sources")
+async def investigation_sources(
+    payload: ImageInvestigationSourcesRequest,
+    request: Request,
+):
+    image_search, news_search = await asyncio.gather(
+        search_commons_images(payload.query, payload.limite),
+        pesquisar_noticias_na_hora(
+            payload.query,
+            payload.pais,
+            payload.limite,
+            settings.newsdata_api_key,
+            settings.gnews_api_key,
+            settings.newsapi_api_key,
+        ),
+        return_exceptions=True,
+    )
+    if isinstance(image_search, BaseException):
+        if not isinstance(image_search, ImageSourceError):
+            raise image_search
+        image_results = {
+            "estado": "erro",
+            "fonte": "Wikimedia Commons",
+            "codigo": image_search.detail,
+            "resultados": [],
+        }
+        await record_bug(
+            method=request.method,
+            path=request.url.path,
+            status=image_search.status_code,
+            detail={"provider": "wikimedia_commons", "error": image_search.detail},
+            request_id=_request_id(request),
+        )
+    else:
+        image_results = image_search
+    if isinstance(news_search, BaseException):
+        raise news_search
+    await _record_news_provider_errors(request, news_search)
+    return {
+        "consulta": payload.query,
+        "imagens": image_results,
+        "noticias": news_search,
+        "nota": "A pesquisa envia apenas o texto da consulta; a imagem não é enviada.",
+    }
+
+
 @app.post("/api/news/tools/execute")
 async def news_tool(payload: NewsToolInvocation, request: Request):
     try:
@@ -209,35 +195,12 @@ async def news_tool(payload: NewsToolInvocation, request: Request):
     return result
 
 
-@app.get("/api/me")
-async def me(user: dict = Depends(get_current_user)):
-    return user
-
-
-@app.get("/api/admin/bugs")
-async def list_bugs(
-    user: dict = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    if user.get("role") not in {"admin", "service_role"}:
-        raise HTTPException(status_code=403, detail="admin_required")
-    result = await db.execute(
-        text(
-            """
-            select id, signature, method, path, status, detail, exception_type,
-                   request_id, resolved, resolution, recurrence_count, created_at, updated_at
-            from public.bug_registry
-            order by updated_at desc
-            limit 250
-            """
-        )
-    )
-    return [dict(row) for row in result.mappings().all()]
-
-
 @app.post("/api/analyze")
 async def analyze(
+    request: Request,
     file: UploadFile = File(...),
+    use_gemini: bool = Form(default=False),
+    language: str = Form(default="pt"),
 ):
     image_bytes = await file.read(MAX_IMAGE_BYTES + 1)
     if len(image_bytes) > MAX_IMAGE_BYTES:
@@ -264,6 +227,26 @@ async def analyze(
         }.get(str(exc), 502)
         raise HTTPException(status_code=status, detail=str(exc)) from exc
 
+    gemini_result = None
+    if use_gemini:
+        try:
+            assessment = await analyze_image_with_gemini(
+                image_bytes,
+                settings.gemini_api_key,
+                settings.gemini_model,
+                language if language in {"pt", "en", "es"} else "pt",
+            )
+            gemini_result = {"estado": "ok", "avaliacao": assessment}
+        except GeminiServiceError as exc:
+            gemini_result = {"estado": "erro", "codigo": exc.detail}
+            await record_bug(
+                method=request.method,
+                path=request.url.path,
+                status=exc.status_code,
+                detail={"provider": "gemini", "error": exc.detail},
+                request_id=_request_id(request),
+            )
+
     return {
         "score": result.score,
         "verdict": classify_score(result.score),
@@ -272,203 +255,10 @@ async def analyze(
             for name, score in result.generator_scores
         ],
         "deepfake_score": result.deepfake_score,
+        "metadata": extract_image_metadata(image_bytes),
+        "gemini": gemini_result,
         "disclaimer": "Model scores are estimates and do not prove image authenticity.",
     }
-
-
-@app.post("/api/investigations")
-async def create_investigation(
-    payload: InvestigationCreate,
-    user: dict = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    result = await db.execute(
-        text(
-            """
-            insert into public.investigations
-              (user_id, title, image_name, score, verdict, deepfake_score, metadata)
-            values
-              (:user_id, :title, :image_name, :score, :verdict, :deepfake_score, cast(:metadata as jsonb))
-            returning id, created_at
-            """
-        ),
-        {
-            "user_id": user["id"],
-            "title": payload.title,
-            "image_name": payload.image_name,
-            "score": payload.score,
-            "verdict": payload.verdict,
-            "deepfake_score": payload.deepfake_score,
-            "metadata": __import__("json").dumps(payload.metadata),
-        },
-    )
-    row = result.mappings().first()
-    await db.commit()
-    return {"id": str(row["id"]), "created_at": row["created_at"].isoformat()}
-
-
-@app.get("/api/investigations")
-async def list_investigations(
-    user: dict = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    result = await db.execute(
-        text(
-            """
-            select id, title, image_name, score, verdict, deepfake_score, metadata, created_at
-            from public.investigations
-            where user_id = :user_id
-            order by created_at desc
-            limit 100
-            """
-        ),
-        {"user_id": user["id"]},
-    )
-    return [dict(row) for row in result.mappings().all()]
-
-
-@app.get("/api/history")
-async def list_history(
-    user: dict = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    result = await db.execute(
-        text(
-            """
-            select id, action, details, created_at
-            from public.verification_history
-            where user_id = :user_id
-            order by created_at desc
-            limit 100
-            """
-        ),
-        {"user_id": user["id"]},
-    )
-    return [dict(row) for row in result.mappings().all()]
-
-
-@app.post("/api/reports")
-async def create_report(
-    payload: dict,
-    user: dict = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    title = str(payload.get("title", "Relatório Ektheto"))[:200]
-    metadata = payload.get("content", {})
-    result = await db.execute(
-        text(
-            """
-            insert into public.reports (user_id, investigation_id, title, content)
-            values (
-              :user_id,
-              nullif(:investigation_id, '')::uuid,
-              :title,
-              cast(:content as jsonb)
-            )
-            returning id, created_at
-            """
-        ),
-        {
-            "user_id": user["id"],
-            "investigation_id": str(payload.get("investigation_id", "") or ""),
-            "title": title,
-            "content": __import__("json").dumps(metadata),
-        },
-    )
-    row = result.mappings().first()
-    await db.commit()
-    return {"id": str(row["id"]), "created_at": row["created_at"].isoformat()}
-
-
-@app.get("/api/reports")
-async def list_reports(
-    user: dict = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    result = await db.execute(
-        text(
-            """
-            select id, investigation_id, title, content, created_at
-            from public.reports
-            where user_id = :user_id
-            order by created_at desc
-            limit 100
-            """
-        ),
-        {"user_id": user["id"]},
-    )
-    return [dict(row) for row in result.mappings().all()]
-
-
-@app.put("/api/settings/{key}")
-async def save_setting(
-    key: str,
-    payload: SettingUpdate,
-    user: dict = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    if key != payload.key:
-        raise HTTPException(status_code=422, detail="key_mismatch")
-    await db.execute(
-        text(
-            """
-            insert into public.user_settings (user_id, key, value)
-            values (:user_id, :key, cast(:value as jsonb))
-            on conflict (user_id, key)
-            do update set value = excluded.value, updated_at = now()
-            """
-        ),
-        {
-            "user_id": user["id"],
-            "key": key,
-            "value": __import__("json").dumps(payload.value),
-        },
-    )
-    await db.commit()
-    return {"key": key, "value": payload.value}
-
-
-@app.get("/api/settings")
-async def list_settings(
-    user: dict = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    result = await db.execute(
-        text("select key, value from public.user_settings where user_id = :user_id"),
-        {"user_id": user["id"]},
-    )
-    return {row["key"]: row["value"] for row in result.mappings().all()}
-
-
-@app.put("/api/integrations/{provider}")
-async def save_integration(
-    provider: str,
-    payload: IntegrationUpdate,
-    user: dict = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    if provider != payload.provider:
-        raise HTTPException(status_code=422, detail="provider_mismatch")
-    await db.execute(
-        text(
-            """
-            insert into public.integrations (user_id, provider, enabled, configuration)
-            values (:user_id, :provider, :enabled, cast(:configuration as jsonb))
-            on conflict (user_id, provider)
-            do update set enabled = excluded.enabled,
-                          configuration = excluded.configuration,
-                          updated_at = now()
-            """
-        ),
-        {
-            "user_id": user["id"],
-            "provider": provider,
-            "enabled": payload.enabled,
-            "configuration": __import__("json").dumps(payload.configuration),
-        },
-    )
-    await db.commit()
-    return {"provider": provider, "enabled": payload.enabled}
 
 
 @app.get("/", include_in_schema=False)

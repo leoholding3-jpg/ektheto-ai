@@ -6,11 +6,8 @@ import logging
 from collections import defaultdict
 from typing import Any
 
-from sqlalchemy import text
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-
-from .database import session_factory
 
 logger = logging.getLogger("ektheto.bugs")
 
@@ -46,37 +43,6 @@ async def record_bug(
         "recurrence_count": recurrence,
     }
     logger.warning("registered_bug=%s", json.dumps(record, default=str))
-
-    if session_factory is not None:
-        try:
-            async with session_factory() as session:
-                await session.execute(
-                    text(
-                        """
-                        insert into public.bug_registry
-                          (signature, method, path, status, detail, exception_type, request_id)
-                        values
-                          (:signature, :method, :path, :status, cast(:detail as jsonb),
-                           :exception_type, :request_id)
-                        on conflict (signature) do update set
-                          recurrence_count = public.bug_registry.recurrence_count + 1,
-                          updated_at = now(),
-                          resolved = false
-                        """
-                    ),
-                    {
-                        "signature": signature,
-                        "method": method,
-                        "path": path,
-                        "status": status,
-                        "detail": json.dumps(detail, default=str),
-                        "exception_type": exception_type,
-                        "request_id": request_id,
-                    },
-                )
-                await session.commit()
-        except Exception as exc:
-            logger.exception("bug_registry_database_write_failed", exc_info=exc)
     return record
 
 

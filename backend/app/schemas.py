@@ -1,31 +1,5 @@
-from datetime import datetime
 from typing import Any, Literal
-from pydantic import BaseModel, ConfigDict, Field
-
-
-class InvestigationCreate(BaseModel):
-    title: str = Field(default="Verificação de imagem", max_length=200)
-    image_name: str | None = Field(default=None, max_length=255)
-    score: float = Field(ge=0, le=1)
-    verdict: str
-    deepfake_score: float | None = Field(default=None, ge=0, le=1)
-    metadata: dict[str, Any] = Field(default_factory=dict)
-
-
-class SettingUpdate(BaseModel):
-    key: str = Field(max_length=100)
-    value: dict[str, Any]
-
-
-class IntegrationUpdate(BaseModel):
-    provider: str = Field(max_length=100)
-    enabled: bool = True
-    configuration: dict[str, Any] = Field(default_factory=dict)
-
-
-class NasaToolInvocation(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
-    arguments: dict[str, Any] = Field(default_factory=dict)
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class NewsSearchRequest(BaseModel):
@@ -34,6 +8,22 @@ class NewsSearchRequest(BaseModel):
     tema: str = Field(min_length=2, max_length=200)
     pais: Literal["ao", "br", "pt"] = "ao"
     limite: int = Field(default=5, ge=1, le=5)
+
+
+class ImageInvestigationSourcesRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(min_length=2, max_length=200)
+    pais: Literal["ao", "br", "pt"] = "ao"
+    limite: int = Field(default=3, ge=1, le=5)
+
+    @field_validator("query")
+    @classmethod
+    def normalize_query(cls, value: str) -> str:
+        normalized = " ".join(value.split())
+        if len(normalized) < 2:
+            raise ValueError("query must contain at least two non-space characters")
+        return normalized
 
 
 class NewsToolInvocation(BaseModel):

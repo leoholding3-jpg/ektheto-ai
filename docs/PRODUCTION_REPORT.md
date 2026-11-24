@@ -1,76 +1,57 @@
-# Ektheto production migration report
+# Ektheto readiness report
 
-## Summary
+## Current state
 
-The local application was migrated from Streamlit to a FastAPI backend with a
-separate static/PWA frontend. The production code is structured for Render,
-Supabase PostgreSQL, Supabase Auth and Cloudflare.
+The codebase uses FastAPI and a static PWA. Supabase, PostgreSQL persistence,
+authentication and the unused NASA tools have been removed from the current
+runtime. The interface stores history only in the browser tab session and does
+not persist uploaded images.
 
-## What changed
+The image investigation flow includes:
 
-- Removed `app.py`, `api.py`, `capturar.py`, `carga_diaria.py`, Streamlit test
-  code and Streamlit dependencies from the runtime.
-- Added `backend/app/main.py` for API routes and static frontend hosting.
-- Added JWT verification for Supabase access tokens.
-- Added protected image analysis and PostgreSQL-backed user data routes.
-- Added account, investigation, report, history, settings and integration APIs.
-- Added a Supabase SQL migration with RLS policies.
-- Added PWA pages for analysis, history, Radar, help, about and settings.
-- Added a Supabase browser login/create-account dialog.
-- Added Render and Docker deployment configuration.
-- Added a structured bug registry and regression tests.
-- Created an external Streamlit backup archive:
-  `streamlit-backup-20261123.tar.gz`.
+- Sightengine as the primary image-analysis provider.
+- Optional Gemini image analysis only after explicit user consent.
+- Local EXIF summary with GPS coordinates withheld.
+- User-triggered text search against Wikimedia Commons and available news
+  providers. The image is not sent to these search providers.
+- A manual map without fabricated distribution charts or sample cases.
 
-## Validation
+## Deployment status
 
-- `python -m pytest tests -v`: 6 tests passed.
-- Backend Python compilation passed.
-- `/api/health`: returned HTTP 200.
-- `/`: returned HTTP 200 and served the Ektheto frontend.
-- `POST /api/analyze` without authentication: HTTP 401 with
-  `{"detail":"invalid_token"}`.
+No Netlify site, Render deployment, custom domain, Cloudflare configuration,
+or new GitHub push was performed. `netlify.toml` publishes the `frontend/`
+directory and `render.yaml` allows the chosen `https://ektheto.netlify.app`
+origin. The Netlify name must still be claimed in an account and is subject to
+availability. Render's free service can sleep, and a custom `.com` domain
+requires paid registration.
 
-## Hardest parts
+The local `.env` is ignored by Git and was not edited. Any former Supabase
+values in that file are no longer read by the application; remove them locally
+if they are no longer needed.
 
-1. **Authentication compatibility:** Supabase supports legacy HS256 JWT secrets
-   and newer asymmetric signing keys through JWKS. The backend supports both
-   modes, selected from environment variables.
-2. **Database security:** RLS and backend ownership checks must agree. The
-   migration uses `auth.uid()` policies, while backend routes validate the JWT
-   first and scope SQL by the token subject.
-3. **Provider fallback:** the analysis provider may reject optional deepfake
-   models. The provider function falls back to the generation model and returns
-   a valid result without a deepfake score.
-4. **Bug classification:** expected authentication failures must not be
-   confused with application bugs. HTTP 422/5xx and unhandled exceptions are
-   registered; missing authentication is normalized to 401.
-5. **External credentials:** deployment cannot be truthfully marked complete
-   without Supabase, Sightengine, Render and Cloudflare credentials.
+## Remaining release requirements
 
-## Why some parts remain as configuration
+1. Claim the Netlify site name and verify it serves the static frontend.
+2. Deploy the FastAPI service on Render, then set its public URL in
+   `frontend/config.js` and run the frontend deployment again.
+3. Provide valid Sightengine credentials and test a real image-analysis
+   request.
+4. Provide a Gemini key if the optional provider is to be enabled; verify it
+   with an explicit, consented request.
+5. Decide whether to use the free Render preview or a paid always-on plan.
+6. Register a custom domain if desired, then configure DNS and HTTPS.
+7. Configure Cloudflare protections if a custom domain is added, matching the
+   selected plan and traffic needs; no Cloudflare settings have been applied
+   from this workspace.
+8. Push the reviewed changes to the authorized GitHub repository.
+9. Configure log alerts and run production smoke tests after deployment.
 
-The repository cannot safely create infrastructure or publish secrets without
-the user's service credentials or explicit dashboard authorization. The local
-source now contains placeholders and deployment manifests, but:
+## Verification
 
-- Supabase requires project creation and migration execution.
-- Render requires account access and secret values.
-- Cloudflare requires domain ownership and DNS control.
-- GitHub private visibility/repository creation requires authenticated account
-  access. The `gh` executable is not currently installed.
-- Production HTTPS and public DNS can only be verified after those resources
-  exist.
-
-## Production launch checklist
-
-1. Create/configure the Supabase project.
-2. Run `supabase/migrations/001_initial.sql`.
-3. Configure environment variables in Render.
-4. Create the private GitHub repository and push this branch.
-5. Deploy the Render service.
-6. Add the custom domain.
-7. Add Cloudflare DNS, WAF, HTTPS and rate limits.
-8. Verify account registration, login, analysis and database persistence.
-9. Run the full test suite against the deployed API.
-10. Enable monitoring and review `/api/admin/bugs`.
+- `python -m pytest tests -q`: 26 tests passed.
+- `python -m compileall -q backend tests`: passed.
+- `node --check frontend/app.js`: passed.
+- `git diff --check`: passed.
+- Live Wikimedia Commons query with generic terms returned three results.
+- Sightengine and Gemini were not called live; those calls require configured
+  credentials and an explicit image-analysis request.

@@ -1,8 +1,9 @@
-# Ektheto bug registry
+# Ektheto error logging
 
 ## Purpose
 
-The API records HTTP 422/5xx failures and unhandled exceptions with:
+The API emits HTTP 422/429/5xx failures and unhandled exceptions as structured
+application logs with:
 
 - deterministic bug signature
 - HTTP method and path
@@ -10,36 +11,21 @@ The API records HTTP 422/5xx failures and unhandled exceptions with:
 - sanitized detail
 - exception type
 - request ID
-- recurrence count
-- resolution state
 
-In production, records are stored in `public.bug_registry`. Locally or before
-Supabase is configured, records are emitted as structured logs.
+The recurrence count is process-local. There is no database-backed issue
+registry or `/api/admin/bugs` endpoint while Supabase is disabled. On Render,
+these records are available in the service logs subject to Render's retention.
 
-The `/api/admin/bugs` endpoint is restricted to `admin` or `service_role`
-principals.
+## What this does and does not do
 
-## Automatic prevention
+1. Request validation failures receive a `422` response and request ID.
+2. Unhandled exceptions receive `500 internal_server_error` and a request ID.
+3. Provider errors are logged with a stable signature and request ID.
+4. The logs help a developer diagnose failures; they do not automatically
+   modify code, retry indefinitely, or resolve bugs.
 
-1. Authentication dependencies use an optional header and return `401
-   invalid_token` when missing or malformed.
-2. Request validation failures receive a stable `422` response plus a request ID.
-3. Unhandled exceptions receive `500 internal_server_error` plus a request ID.
-4. Repeated signatures reuse the same registry record and increment the
-   recurrence count instead of creating duplicate rows.
-5. A deterministic signature test prevents equivalent HTTP failures from being
-   misclassified after code changes.
+## Validation
 
-## Known case: missing Authorization header
-
-- **Observed:** a missing Bearer header was validated as a required
-  `Header(...)` dependency and returned `422`.
-- **Root cause:** FastAPI dependency validation occurred before the
-  authentication function could translate an absent header to an unauthorized
-  response.
-- **Fix:** the dependency now accepts `authorization: str | None =
-  Header(default=None)` and returns `401 {"detail":"invalid_token"}`.
-- **Regression test:** `test_missing_auth_is_rejected`
-- **Repeat test:** `test_missing_auth_is_stable_for_regression`
-- **Prevention:** the missing-token contract is covered by repeated tests and
-  recorded in the bug registry.
+Regression tests cover validation error logging, provider failures and stable
+bug signatures. Production log access and alerting still need to be configured
+in the hosting account.

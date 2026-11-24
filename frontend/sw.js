@@ -1,4 +1,4 @@
-const CACHE_NAME = "ektheto-v3-zip-design-v3-radar-map";
+const CACHE_NAME = "ektheto-v3-zip-design-v7-netlify";
 const APP_SHELL = [
   "/",
   "/styles.css",
@@ -25,6 +25,11 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
-  if (new URL(request.url).pathname.startsWith("/api/")) return;
+  const pathname = new URL(request.url).pathname;
+  if (pathname.startsWith("/api/")) return;
+  if (pathname === "/config.js") {
+    event.respondWith(fetch(request, { cache: "no-store" }));
+    return;
+  }
   event.respondWith(caches.match(request).then((cached) => cached || fetch(request)));
 });

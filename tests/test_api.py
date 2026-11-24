@@ -24,120 +24,6 @@ def test_health():
     assert response.json()["status"] == "ok"
 
 
-def test_public_config():
-    response = client.get("/api/config/public")
-    assert response.status_code == 200
-    assert "supabase_url" in response.json()
-
-
-def test_nasa_tool_schemas_are_available_without_exposing_api_key():
-    response = client.get("/api/nasa/tools")
-
-    assert response.status_code == 200
-    names = [tool["function"]["name"] for tool in response.json()]
-    assert names == ["obter_foto_astronomia_do_dia", "buscar_asteroides_proximos"]
-    assert settings.nasa_api_key not in response.text
-
-
-def test_nasa_apod_endpoint_normalizes_response_and_keeps_key_server_side():
-    nasa_response = httpx.Response(
-        200,
-        json={
-            "title": "Nebula",
-            "date": "2025-11-22",
-            "explanation": "A NASA astronomy image.",
-            "url": "https://images.example.test/apod.jpg",
-        },
-    )
-    mock_get = AsyncMock(return_value=nasa_response)
-    with patch.object(settings, "nasa_api_key", "test-nasa-key"), patch(
-        "backend.app.nasa.httpx.AsyncClient.get",
-        new=mock_get,
-    ):
-        response = client.get("/api/nasa/apod", params={"date": "2025-11-22"})
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "titulo": "Nebula",
-        "data": "2025-11-22",
-        "explicacao": "A NASA astronomy image.",
-        "url_imagem": "https://images.example.test/apod.jpg",
-    }
-    assert mock_get.await_args.kwargs["params"]["api_key"] == "test-nasa-key"
-    assert "test-nasa-key" not in response.text
-
-
-def test_nasa_rate_limit_is_returned_and_registered(caplog):
-    mock_get = AsyncMock(return_value=httpx.Response(429, json={"error": "quota"}))
-    with patch("backend.app.nasa.httpx.AsyncClient.get", new=mock_get):
-        response = client.get("/api/nasa/apod")
-
-    assert response.status_code == 429
-    assert response.json()["detail"] == "nasa_rate_limit"
-    assert settings.nasa_api_key not in response.text
-    assert "registered_bug=" in caplog.text
-    assert '"status": 429' in caplog.text
-    assert "upstream_rate_limit" in caplog.text
-
-
-def test_nasa_asteroid_endpoint_enforces_seven_day_range_before_request():
-    mock_get = AsyncMock()
-    with patch("backend.app.nasa.httpx.AsyncClient.get", new=mock_get):
-        response = client.get(
-            "/api/nasa/asteroids",
-            params={"start_date": "2025-11-01", "end_date": "2025-11-09"},
-        )
-
-    assert response.status_code == 422
-    assert response.json()["detail"] == "nasa_date_range_exceeds_7_days"
-    mock_get.assert_not_awaited()
-
-
-def test_nasa_asteroid_endpoint_returns_total_and_summary():
-    mock_get = AsyncMock(return_value=httpx.Response(200, json={"element_count": 3}))
-    with patch.object(settings, "nasa_api_key", "test-nasa-key"), patch(
-        "backend.app.nasa.httpx.AsyncClient.get",
-        new=mock_get,
-    ):
-        response = client.get(
-            "/api/nasa/asteroids",
-            params={"start_date": "2025-11-01", "end_date": "2025-11-07"},
-        )
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "total_asteroides": 3,
-        "resumo": "Foram detetados 3 asteroides próximos da Terra entre 2025-11-01 e 2025-11-07.",
-    }
-    assert mock_get.await_args.kwargs["params"]["api_key"] == "test-nasa-key"
-
-
-def test_nasa_tool_execution_dispatches_to_apod():
-    mock_get = AsyncMock(
-        return_value=httpx.Response(
-            200,
-            json={
-                "title": "Nebula",
-                "date": "2025-11-22",
-                "explanation": "A NASA astronomy image.",
-                "url": "https://images.example.test/apod.jpg",
-            },
-        )
-    )
-    with patch("backend.app.nasa.httpx.AsyncClient.get", new=mock_get):
-        response = client.post(
-            "/api/nasa/tools/execute",
-            json={
-                "name": "obter_foto_astronomia_do_dia",
-                "arguments": {"data": "2025-11-22"},
-            },
-        )
-
-    assert response.status_code == 200
-    assert response.json()["titulo"] == "Nebula"
-    assert mock_get.await_args.kwargs["params"]["date"] == "2025-11-22"
-
-
 def test_news_tool_schema_is_available():
     response = client.get("/api/news/tools")
 
@@ -154,6 +40,17 @@ def test_request_validation_error_is_registered_once(caplog):
     ]
     assert len(records) == 1
     assert '"exception_type": "RequestValidationError"' in records[0]
+
+
+def test_validation_error_logs_do_not_include_submitted_values(caplog):
+    private_query = "private-user-search-term"
+    response = client.post(
+        "/api/investigation/sources",
+        json={"query": private_query * 10},
+    )
+
+    assert response.status_code == 422
+    assert private_query not in caplog.text
 
 
 def test_news_search_aggregates_providers_and_registers_partial_failures(caplog):
@@ -269,14 +166,86 @@ def test_news_tool_execution_uses_gdelt_when_optional_keys_are_missing():
     assert mock_get.await_count == 1
 
 
+def test_investigation_sources_combines_text_only_image_and_news_searches():
+    images = {
+        "estado": "ok",
+        "fonte": "Wikimedia Commons",
+        "resultados": [
+            {
+                "title": "File: Example.jpg",
+                "thumbnail_url": "https://upload.wikimedia.org/example.jpg",
+                "source_url": "https://commons.wikimedia.org/wiki/File:Example.jpg",
+                "license": "CC BY-SA 4.0",
+            }
+        ],
+    }
+    news = {
+        "tema": "street poster",
+        "pais": "ao",
+        "provedores": {
+            "gdelt": {"estado": "ok", "artigos": []},
+            "newsdata": {"estado": "nao_configurado", "artigos": []},
+            "gnews": {"estado": "nao_configurado", "artigos": []},
+            "newsapi": {"estado": "nao_configurado", "artigos": []},
+        },
+    }
+    with (
+        patch("backend.app.main.search_commons_images", new=AsyncMock(return_value=images)) as mock_images,
+        patch("backend.app.main.pesquisar_noticias_na_hora", new=AsyncMock(return_value=news)) as mock_news,
+    ):
+        response = client.post(
+            "/api/investigation/sources",
+            json={"query": "street poster", "pais": "ao", "limite": 3},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["imagens"] == images
+    assert response.json()["noticias"] == news
+    assert "a imagem não é enviada" in response.json()["nota"]
+    mock_images.assert_awaited_once_with("street poster", 3)
+    assert mock_news.await_args.args[:3] == ("street poster", "ao", 3)
+
+
+def test_investigation_sources_keeps_news_results_when_wikimedia_is_unavailable():
+    from backend.app.image_sources import ImageSourceError
+
+    news = {"provedores": {"gdelt": {"estado": "ok", "artigos": []}}}
+    with (
+        patch(
+            "backend.app.main.search_commons_images",
+            new=AsyncMock(side_effect=ImageSourceError(504, "commons_timeout")),
+        ),
+        patch("backend.app.main.pesquisar_noticias_na_hora", new=AsyncMock(return_value=news)),
+    ):
+        response = client.post(
+            "/api/investigation/sources",
+            json={"query": "Angola tecnologia"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["imagens"]["codigo"] == "commons_timeout"
+    assert response.json()["noticias"] == news
+
+
+def test_investigation_sources_validates_query_length():
+    for query in ("x", "   "):
+        response = client.post("/api/investigation/sources", json={"query": query})
+        assert response.status_code == 422
+
+
 def test_frontend_is_served():
     response = client.get("/")
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert b"Ektheto" in response.content
+    assert response.content.index(b"/config.js") < response.content.index(b"/app.js")
+    config = client.get("/config.js")
+    assert config.status_code == 200
+    assert b'window.EKTHETO_API_BASE_URL = "";' in config.content
     assert b"auth-dialog" not in response.content
     assert b"account-button" not in response.content
-    assert b"supabase-js" not in response.content
+    assert client.get("/api/config/public").status_code == 404
+    assert client.get("/api/nasa/tools").status_code == 404
     app_js = client.get("/app.js")
     assert app_js.status_code == 200
     assert b"100 MB" in app_js.content
@@ -291,6 +260,8 @@ def test_frontend_is_served():
     assert b'data-country="PRT"' in world_map.content
     assert b"radar-country-color" in app_js.content
     assert b"radar-map-export" in app_js.content
+    assert b"exemplo.com/foto-falsa" not in app_js.content
+    assert "Pesquisar imagens e notícias relacionadas".encode() in app_js.content
 
 
 def test_image_validation_accepts_files_larger_than_50mb():
@@ -321,7 +292,9 @@ def test_image_analysis_works_without_account():
 
     with patch.object(settings, "sightengine_user", "test-user"), patch.object(
         settings, "sightengine_secret", "test-secret"
-    ), patch("backend.app.main.analyze_image", return_value=ImageAnalysis(score=0.87, deepfake_score=0.12)):
+    ), patch("backend.app.main.analyze_image", return_value=ImageAnalysis(score=0.87, deepfake_score=0.12)), patch(
+        "backend.app.main.analyze_image_with_gemini", new_callable=AsyncMock
+    ) as mock_gemini:
         response = client.post(
             "/api/analyze",
             files={"file": ("image.png", make_image(), "image/png")},
@@ -330,6 +303,81 @@ def test_image_analysis_works_without_account():
     assert response.status_code == 200
     assert response.json()["score"] == 0.87
     assert response.json()["deepfake_score"] == 0.12
+    assert response.json()["metadata"]["gps_data_present"] is False
+    assert response.json()["gemini"] is None
+    mock_gemini.assert_not_awaited()
+
+
+def test_image_analysis_runs_gemini_only_after_explicit_opt_in():
+    from backend.app.analyzer import ImageAnalysis
+
+    assessment = {
+        "descricao": "A street scene.",
+        "texto_visivel": [],
+        "pistas_visuais": ["A sign is partly obscured."],
+        "hipoteses": [],
+        "verificacoes_sugeridas": ["Find the original post."],
+        "limitacoes": "The image alone cannot confirm its origin.",
+    }
+    mock_gemini = AsyncMock(return_value=assessment)
+    with (
+        patch.object(settings, "sightengine_user", "test-user"),
+        patch.object(settings, "sightengine_secret", "test-secret"),
+        patch.object(settings, "gemini_api_key", "test-gemini-key"),
+        patch.object(settings, "gemini_model", "gemini-3.6-flash"),
+        patch(
+            "backend.app.main.analyze_image",
+            return_value=ImageAnalysis(score=0.87, deepfake_score=0.12),
+        ),
+        patch("backend.app.main.analyze_image_with_gemini", new=mock_gemini),
+    ):
+        response = client.post(
+            "/api/analyze",
+            files={"file": ("image.png", make_image(), "image/png")},
+            data={"use_gemini": "true", "language": "en"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["score"] == 0.87
+    assert response.json()["gemini"] == {"estado": "ok", "avaliacao": assessment}
+    mock_gemini.assert_awaited_once()
+    assert mock_gemini.await_args.args[1:] == (
+        "test-gemini-key",
+        "gemini-3.6-flash",
+        "en",
+    )
+
+
+def test_gemini_failure_keeps_sightengine_result_and_registers_provider_error(caplog):
+    from backend.app.analyzer import ImageAnalysis
+    from backend.app.gemini import GeminiServiceError
+
+    with (
+        patch.object(settings, "sightengine_user", "test-user"),
+        patch.object(settings, "sightengine_secret", "test-secret"),
+        patch.object(settings, "gemini_api_key", "test-gemini-key"),
+        patch(
+            "backend.app.main.analyze_image",
+            return_value=ImageAnalysis(score=0.87, deepfake_score=0.12),
+        ),
+        patch(
+            "backend.app.main.analyze_image_with_gemini",
+            new=AsyncMock(side_effect=GeminiServiceError(429, "gemini_rate_limit")),
+        ),
+    ):
+        response = client.post(
+            "/api/analyze",
+            files={"file": ("image.png", make_image(), "image/png")},
+            data={"use_gemini": "true"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["score"] == 0.87
+    assert response.json()["gemini"] == {
+        "estado": "erro",
+        "codigo": "gemini_rate_limit",
+    }
+    assert '"provider": "gemini"' in caplog.text
 
 
 def test_bug_signature_is_deterministic():

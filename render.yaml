@@ -2,7 +2,7 @@ services:
   - type: web
     name: ektheto-api
     runtime: python
-    plan: starter
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
@@ -10,16 +10,12 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: CORS_ORIGINS
-        sync: false
-      - key: DATABASE_URL
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_ANON_KEY
-        sync: false
-      - key: SUPABASE_JWT_SECRET
-        sync: false
+        value: http://localhost:8000,http://127.0.0.1:8000,https://ektheto.netlify.app
       - key: SIGHTENGINE_USER
         sync: false
       - key: SIGHTENGINE_SECRET
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash

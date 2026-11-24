@@ -1,128 +1,97 @@
 # Ektheto
 
-Ektheto is a FastAPI + static frontend application for AI-image investigation.
-The current interface follows the supplied ZIP design: an onboarding carousel,
-image analysis, session-only history, Radar, settings and help. Account creation
-and sign-in are intentionally not part of this iteration.
+Ektheto is a FastAPI application with a lightweight static/PWA frontend for
+investigating suspicious images. The current flow provides image analysis,
+optional Gemini observations, session-only history, text-based source search,
+and a manual map.
 
-## Architecture
+## Architecture and current scope
 
-- `frontend/`: installable PWA served by FastAPI
-- `backend/app/`: API, image analysis, Supabase JWT authentication, PostgreSQL access
-- `supabase/migrations/`: PostgreSQL schema and row-level security policies
-- `render.yaml`: Render web-service deployment
-- `Dockerfile`: container deployment
+- `frontend/`: static PWA, deployable to Netlify or served by FastAPI
+- `backend/app/`: API, image analysis, EXIF summary, news and image-source search
+- `netlify.toml`: publishes `frontend/` as a static Netlify site
+- `render.yaml`: Render web-service configuration for the FastAPI backend
+- `Dockerfile`: optional container deployment
+
+Supabase, PostgreSQL persistence, user accounts and authentication are
+temporarily disabled. History stays in the current browser tab's
+`sessionStorage`; uploaded images are not retained by Ektheto.
 
 ## Local development
 
 ```powershell
 python -m pip install -r requirements.txt
 copy .env.example .env
-# Fill in Sightengine values for live image analysis
+# Set Sightengine credentials for live image analysis
 python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Open `http://127.0.0.1:8000`.
+Open `http://127.0.0.1:8000`. Configure credentials only in `.env` or the
+hosting provider's secret settings; never commit populated secrets.
 
-The onboarding and current-session history are intentionally account-free.
-History metadata lives only in the current browser tab session; image files are
-not stored in history.
+## Investigation providers
 
-The Radar map is a local SVG generated from Natural Earth 1:110m Admin-0
-country data ([public-domain source](https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/)).
-It supports country coloring, zoom, panning, ocean color, and SVG export without
-loading map libraries or geographic data from a CDN at runtime.
+- **Sightengine:** primary image-generation and optional deepfake scoring.
+  Requires `SIGHTENGINE_USER` and `SIGHTENGINE_SECRET`.
+- **Gemini:** optional visual description and investigation prompts. The user
+  must opt in before the image is sent to Google. Requires `GEMINI_API_KEY`;
+  `GEMINI_MODEL` is optional.
+- **Image metadata:** EXIF is read by the backend. GPS coordinates are never
+  returned; the UI only indicates whether GPS metadata exists. Metadata may be
+  missing, edited, or forged and is not proof of authenticity.
+- **Wikimedia Commons:** free, no-key text search for related media. The
+  image itself is not sent. This is not reverse-image search and does not
+  establish that a result is the same image.
+- **News:** GDELT is queried without a key; NewsData.io, GNews and NewsAPI can
+  be enabled with optional keys. Their status and quotas depend on each
+  provider. The result screen sends only the search text to these providers.
 
-## Supabase
+The result screen's external search is user-triggered. It searches Wikimedia
+Commons and configured news providers; no image is uploaded by that search.
 
-1. Create a Supabase project when the account/database iteration is approved.
-2. Run `supabase/migrations/001_initial.sql` in the Supabase SQL Editor.
-3. Configure the Supabase environment variables in Render.
+## Netlify frontend and Render API
 
-The database migration is retained for that later iteration. In the current
-ZIP-design flow, history is held only in browser `sessionStorage` and is
-discarded when the tab session ends. No account is needed to select an image.
+The selected frontend address is `https://ektheto.netlify.app`, subject to
+availability in the Netlify account. `netlify.toml` publishes the `frontend/`
+directory without a build step. Create the Netlify site from the GitHub
+repository and confirm the publish directory is `frontend`.
 
-## Render
+The FastAPI backend remains a separate Render service. After deploying it,
+set `window.EKTHETO_API_BASE_URL` in `frontend/config.js` to the backend's
+public HTTPS URL, for example `https://<service-name>.onrender.com`, and
+redeploy the frontend. The Render `CORS_ORIGINS` setting already includes the
+selected Netlify origin; change it if Netlify assigns a different URL.
 
-Create a Render Web Service from this repository or use `render.yaml`.
-Set every `sync: false` environment variable in the Render dashboard.
-Configure `CORS_ORIGINS` with the public frontend origin.
+`render.yaml` uses Render's **Free** web-service plan for preview/testing.
+Free services can sleep when idle and cold-start slowly, so this is not a
+reliable production plan. Netlify's subdomain is free if available; a custom
+`.com` domain must be registered and paid for separately. No Netlify site or
+Render deployment has been created from this workspace.
 
-Build: `pip install -r requirements.txt`
-
-Start: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
-
-Health: `/api/health`
-
-## Frontend deployment
-
-The frontend is currently served by FastAPI and can be deployed with the backend.
-For CDN/static hosting, publish `frontend/` and set the frontend origin in
-`CORS_ORIGINS`.
-
-## NASA tools
-
-The FastAPI backend provides the NASA Astronomy Picture of the Day (APOD) and
-Near Earth Object (NeoWs) tools. Set `NASA_API_KEY` in `.env` or the Render
-environment; `DEMO_KEY` is a low-quota testing key and should be replaced before
-production. The key stays on the server and is not included in API responses.
-
-- `GET /api/nasa/apod?date=YYYY-MM-DD` (date optional)
-- `GET /api/nasa/asteroids?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`
-- `GET /api/nasa/tools` returns function-calling schemas.
-- `POST /api/nasa/tools/execute` dispatches a tool with `{ "name": "...", "arguments": {} }`.
-
-NeoWs date ranges are validated to a maximum seven-day difference. Upstream
-timeouts and NASA rate limits are returned as explicit API errors.
-
-## News search tools
-
-News search queries GDELT, NewsData.io, GNews and NewsAPI concurrently. GDELT
-needs no key; the other providers are enabled independently by setting
-`NEWSDATA_API_KEY`, `GNEWS_API_KEY` and `NEWSAPI_API_KEY`. Missing keys return a
-`nao_configurado` provider status, while provider failures are returned
-separately and registered in the bug log. Provider quotas and freshness depend
-on each provider's plan.
-
-- `POST /api/news/search` accepts `{ "tema": "Angola tecnologia", "pais": "ao", "limite": 5 }`.
-- `GET /api/news/tools` returns the function-calling schema.
-- `POST /api/news/tools/execute` dispatches `pesquisar_noticias_na_hora`.
-
-## Cloudflare
-
-Point the production domain to Render, enable Cloudflare proxying, set DNS to
-Full (Strict) mode, configure HTTPS, WAF/managed rules and rate limiting.
-Keep Cloudflare origin protection enabled in production.
+Free hosting does not make third-party analysis free: check the current usage
+limits and billing terms for Sightengine, Gemini and optional news providers.
 
 ## API
 
 - `GET /api/health`
-- `GET /api/config/public`
-- `GET /api/nasa/apod`
-- `GET /api/nasa/asteroids`
-- `GET /api/nasa/tools`
-- `POST /api/nasa/tools/execute`
+- `POST /api/analyze` — multipart `file`, optional `use_gemini`, `language`
+- `POST /api/investigation/sources` — JSON `{ "query": "...", "pais": "ao", "limite": 3 }`
 - `POST /api/news/search`
 - `GET /api/news/tools`
 - `POST /api/news/tools/execute`
-- `GET /api/me`
-- `POST /api/analyze`
-- `GET/POST /api/investigations`
-- `GET/POST /api/reports`
-- `GET /api/history`
-- `GET/PUT /api/settings/{key}`
-- `GET/PUT /api/integrations/{provider}`
+- `GET /api/docs`
 
-Account/database endpoints remain protected for a later iteration. Image
-analysis is available without an account; analysis still requires the
-Sightengine environment credentials on the server. Image uploads are limited
-to 100 MB and 50 megapixels; larger-than-provider-limit images are converted
-to a temporary JPEG for analysis, while the browser keeps the original preview.
+Image uploads are limited to 100 MB and 50 megapixels. The analysis provider
+may receive an optimized temporary image. API failures are registered in
+application logs with request IDs; the system does not automatically repair
+code or persist an issue database.
 
-## Tests
+## Validation
 
 ```powershell
 python -m pip install pytest
 python -m pytest tests -v
+node --check frontend/app.js
+node --check frontend/config.js
+git diff --check
 ```

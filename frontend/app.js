@@ -1,3 +1,8 @@
+const API_BASE_URL = typeof window.EKTHETO_API_BASE_URL === "string"
+  ? window.EKTHETO_API_BASE_URL.trim().replace(/\/+$/, "")
+  : "";
+const apiUrl = (path) => `${API_BASE_URL}${path}`;
+
 const cover = document.querySelector("#cover");
 const onboarding = document.querySelector("#onboarding");
 const appShell = document.querySelector("#app-shell");
@@ -14,7 +19,7 @@ const slides = [
   {
     image: "/assets/zip-slide-investigate.jpg",
     title: "Investiga cada detalhe",
-    copy: "Como um detetive, a Ektheto segue as pistas da imagem e mostra-te onde está o falso.",
+    copy: "A estimativa ajuda a identificar sinais possíveis. Consulta os metadados e fontes relacionadas, mas não trates o resultado como prova.",
   },
   {
     image: "/assets/zip-slide-session.jpg",
@@ -35,7 +40,7 @@ const toolIcons = {
 const tools = [
   ["analisar", "Analisar"],
   ["historico", "Histórico"],
-  ["radar", "Radar"],
+  ["radar", "Mapa"],
   ["ajuda", "Ajuda"],
   ["sobre", "Sobre"],
   ["definicoes", "Definições"],
@@ -49,17 +54,35 @@ const translations = {
     "Verifica qualquer imagem": "Check any image",
     "Guarda a foto suspeita que recebeste e faz upload aqui. A Ektheto mostra-te se tem sinais de IA.": "Upload the suspicious photo you received. Ektheto shows signs that may indicate AI.",
     "Investiga cada detalhe": "Investigate every detail",
-    "Como um detetive, a Ektheto segue as pistas da imagem e mostra-te onde está o falso.": "Like a detective, Ektheto follows the image clues and shows you where something may be false.",
+    "A estimativa ajuda a identificar sinais possíveis. Consulta os metadados e fontes relacionadas, mas não trates o resultado como prova.": "The estimate may help identify possible signals. Check metadata and related sources, but do not treat the result as proof.",
     "O teu histórico, só na tua sessão": "Your history, only in this session",
     "As tuas verificações ficam organizadas e só nesta sessão. Sem login, sem conta, sem guardar fora.": "Your checks stay organized in this session only. No login, no account, nothing stored outside it.",
-    "Expor o que é falso. Revelar o que é real.": "Expose what is false. Reveal what is real.",
+    "Investigar com cuidado. Verificar com fontes.": "Investigate carefully. Verify with sources.",
     "Analisar imagem": "Analyze image",
     "Escolhe uma imagem para verificar se tem sinais de IA.": "Choose an image to check for signs of AI.",
     "Arrasta a imagem ou toca para escolher": "Drop an image or tap to choose",
     "Escolher imagem da galeria": "Choose an image from your gallery",
     "Arrasta a imagem para aqui ou toca para abrir a galeria.": "Drop an image here or tap to open your gallery.",
+    "Análise complementar com Gemini (opcional)": "Additional Gemini analysis (optional)",
+    "Se selecionares, a imagem também será enviada ao Google para análise complementar.": "If selected, the image will also be sent to Google for additional analysis.",
+    "Análise complementar do Gemini": "Gemini additional analysis",
+    "Descrição visual": "Visual description",
+    "Texto visível": "Visible text",
+    "Pistas observadas": "Observed clues",
+    "Hipóteses para verificar": "Hypotheses to check",
+    "Verificações sugeridas": "Suggested checks",
+    Limitações: "Limitations",
+    "A análise do Gemini pode conter erros e não confirma autenticidade.": "Gemini analysis may be wrong and does not establish authenticity.",
+    "Gemini não configurado. Adiciona a chave no servidor.": "Gemini is not configured. Add the key on the server.",
+    "Credenciais Gemini inválidas.": "Gemini credentials are invalid.",
+    "Limite Gemini atingido. Tenta novamente mais tarde.": "Gemini rate limit reached. Try again later.",
+    "Modelo Gemini não disponível.": "Gemini model is unavailable.",
+    "Gemini demorou demasiado a responder.": "Gemini took too long to respond.",
+    "Gemini temporariamente indisponível.": "Gemini is temporarily unavailable.",
+    "Gemini devolveu uma resposta inválida.": "Gemini returned an invalid response.",
+    "Não foi possível concluir a análise complementar.": "The additional analysis could not be completed.",
     "JPG, JPEG, PNG, WEBP ou BMP · Até 100 MB · 50 MP": "JPG, JPEG, PNG, WEBP or BMP · Up to 100 MB · 50 MP",
-    "A imagem fica só nesta sessão.": "The image stays only in this session.",
+    "A Ektheto não guarda a imagem. A análise principal envia-a ao Sightengine; o Gemini só a recebe se selecionares a opção.": "Ektheto does not store the image. The primary check sends it to Sightengine; Gemini receives it only if you opt in.",
     "Passo": "Step",
     "de": "of",
     "Recuar": "Back",
@@ -67,10 +90,39 @@ const translations = {
     "Pular tutorial": "Skip tutorial",
     "Concluir": "Finish",
     "Exemplo visual — não é uma análise real.": "Illustrative example — not a real analysis.",
-    "Onde o link nasceu, por onde passou e quem distribuiu.": "Where a link started, where it travelled, and who shared it.",
-    "Links detetados por país": "Links detected by country",
-    "Ver análise": "View analysis",
-    "Cada país tem a sua cor. Quando muda de país, muda de cor.": "Each country has its own color. The color changes with the country.",
+    "Mapa": "Map",
+    "Mapa de investigação": "Investigation map",
+    "Mapa manual para organizar visualmente uma investigação. Não rastreia links, partilhas ou pessoas.": "A manual map for organizing an investigation. It does not track links, shares, or people.",
+    "Pesquisar contexto externo": "Search external context",
+    "Escreve palavras-chave ou aceita a descrição do Gemini. Só o texto será enviado para a pesquisa; a imagem não será partilhada.": "Enter keywords or use Gemini's description. Only text is sent to search; the image is not shared.",
+    "Pesquisar imagens e notícias relacionadas": "Search related images and news",
+    "A escrever pelo menos 2 caracteres.": "Enter at least 2 characters.",
+    "A pesquisar fontes...": "Searching sources...",
+    "Não foi possível pesquisar as fontes. Tenta novamente.": "Could not search sources. Try again.",
+    "Imagens relacionadas": "Related images",
+    "Notícias relacionadas": "Related news",
+    "Sem imagens relacionadas encontradas.": "No related images found.",
+    "Sem notícias encontradas.": "No news found.",
+    "Pesquisa textual: estes resultados não confirmam correspondência visual.": "Text search: these results do not confirm visual matches.",
+    "A pesquisa de imagens está temporariamente indisponível.": "Image search is temporarily unavailable.",
+    Licença: "License",
+    "Licença:": "License:",
+    Criador: "Creator",
+    "Criador:": "Creator:",
+    Consulta: "Search query",
+    "Ver fonte": "View source",
+    "Metadados da imagem": "Image metadata",
+    Fabricante: "Make",
+    Modelo: "Model",
+    Software: "Software",
+    "Data de captura": "Capture date",
+    "A imagem inclui dados de GPS; as coordenadas não são apresentadas.": "The image contains GPS data; coordinates are not shown.",
+    "Os metadados podem ser removidos ou alterados; não são prova de origem.": "Metadata can be removed or changed; it is not proof of origin.",
+    "A pesquisa envia apenas o texto da consulta; a imagem não é enviada.": "Only the search text is sent; the image is not sent.",
+    "Fontes opcionais sem chave:": "Optional sources without keys:",
+    "Algumas fontes falharam:": "Some sources failed:",
+    "Mapa manual": "Manual map",
+    "Clica num país para o colorir. O mapa não mostra a origem nem a circulação de imagens.": "Click a country to color it. The map does not show image origins or circulation.",
     Analisar: "Analyze",
     Histórico: "History",
     Ajuda: "Help",
@@ -78,7 +130,6 @@ const translations = {
     Definições: "Settings",
     "Voltar para a pesquisa": "Back to search",
     "Voltar para o histórico": "Back to history",
-    "Voltar para EkthetoRadar": "Back to EkthetoRadar",
     "Voltar para Definições": "Back to Settings",
     "Voltar para o resultado": "Back to results",
     "Limpar histórico": "Clear history",
@@ -95,14 +146,6 @@ const translations = {
     "Porque isto acontece": "Why this happens",
     "O que isto não prova": "What this does not prove",
     "Toca em Voltar para ver os outros itens.": "Tap Back to see the other items.",
-    "Avisos do Radar": "Radar alerts",
-    "Quando é que queres receber avisos?": "When would you like to receive alerts?",
-    "Avisos ligados": "Alerts on",
-    "Recebe todos os avisos do Radar.": "Receive all Radar alerts.",
-    "Só alerta alto": "High alerts only",
-    "Recebe apenas avisos importantes.": "Receive only important alerts.",
-    "Sem avisos": "No alerts",
-    "Não mostrar avisos do Radar.": "Do not show Radar alerts.",
     Idioma: "Language",
     "Como analisar uma imagem?": "How do I check an image?",
     "O que significa Ektheto?": "What does Ektheto mean?",
@@ -131,17 +174,35 @@ const translations = {
     "Verifica qualquer imagem": "Verifica cualquier imagen",
     "Guarda a foto suspeita que recebeste e faz upload aqui. A Ektheto mostra-te se tem sinais de IA.": "Sube aquí la foto sospechosa que recibiste. Ektheto muestra señales que podrían indicar IA.",
     "Investiga cada detalhe": "Investiga cada detalle",
-    "Como um detetive, a Ektheto segue as pistas da imagem e mostra-te onde está o falso.": "Como un detective, Ektheto sigue las pistas de la imagen y muestra dónde podría estar lo falso.",
+    "A estimativa ajuda a identificar sinais possíveis. Consulta os metadados e fontes relacionadas, mas não trates o resultado como prova.": "La estimación puede ayudar a identificar indicios. Consulta los metadatos y fuentes relacionadas, pero no la consideres una prueba.",
     "O teu histórico, só na tua sessão": "Tu historial, solo en esta sesión",
     "As tuas verificações ficam organizadas e só nesta sessão. Sem login, sem conta, sem guardar fora.": "Tus verificaciones quedan organizadas solo en esta sesión. Sin iniciar sesión, sin cuenta y sin guardar fuera.",
-    "Expor o que é falso. Revelar o que é real.": "Exponer lo falso. Revelar lo real.",
+    "Investigar com cuidado. Verificar com fontes.": "Investigar con cuidado. Verificar con fuentes.",
     "Analisar imagem": "Analizar imagen",
     "Escolhe uma imagem para verificar se tem sinais de IA.": "Elige una imagen para comprobar si tiene señales de IA.",
     "Arrasta a imagem ou toca para escolher": "Arrastra una imagen o toca para elegir",
     "Escolher imagem da galeria": "Elegir una imagen de la galería",
     "Arrasta a imagem para aqui ou toca para abrir a galeria.": "Arrastra la imagen aquí o toca para abrir la galería.",
+    "Análise complementar com Gemini (opcional)": "Análisis adicional con Gemini (opcional)",
+    "Se selecionares, a imagem também será enviada ao Google para análise complementar.": "Si la seleccionas, la imagen también se enviará a Google para un análisis adicional.",
+    "Análise complementar do Gemini": "Análisis adicional de Gemini",
+    "Descrição visual": "Descripción visual",
+    "Texto visível": "Texto visible",
+    "Pistas observadas": "Indicios observados",
+    "Hipóteses para verificar": "Hipótesis por comprobar",
+    "Verificações sugeridas": "Comprobaciones sugeridas",
+    Limitações: "Limitaciones",
+    "A análise do Gemini pode conter erros e não confirma autenticidade.": "El análisis de Gemini puede equivocarse y no confirma la autenticidad.",
+    "Gemini não configurado. Adiciona a chave no servidor.": "Gemini no está configurado. Añade la clave en el servidor.",
+    "Credenciais Gemini inválidas.": "Las credenciales de Gemini no son válidas.",
+    "Limite Gemini atingido. Tenta novamente mais tarde.": "Se alcanzó el límite de Gemini. Inténtalo más tarde.",
+    "Modelo Gemini não disponível.": "El modelo Gemini no está disponible.",
+    "Gemini demorou demasiado a responder.": "Gemini tardó demasiado en responder.",
+    "Gemini temporariamente indisponível.": "Gemini no está disponible temporalmente.",
+    "Gemini devolveu uma resposta inválida.": "Gemini devolvió una respuesta no válida.",
+    "Não foi possível concluir a análise complementar.": "No se pudo completar el análisis adicional.",
     "JPG, JPEG, PNG, WEBP ou BMP · Até 100 MB · 50 MP": "JPG, JPEG, PNG, WEBP o BMP · Hasta 100 MB · 50 MP",
-    "A imagem fica só nesta sessão.": "La imagen permanece solo en esta sesión.",
+    "A Ektheto não guarda a imagem. A análise principal envia-a ao Sightengine; o Gemini só a recebe se selecionares a opção.": "Ektheto no guarda la imagen. El análisis principal la envía a Sightengine; Gemini solo la recibe si eliges la opción.",
     "Passo": "Paso",
     "de": "de",
     "Recuar": "Atrás",
@@ -149,10 +210,39 @@ const translations = {
     "Pular tutorial": "Saltar tutorial",
     "Concluir": "Terminar",
     "Exemplo visual — não é uma análise real.": "Ejemplo visual: no es un análisis real.",
-    "Onde o link nasceu, por onde passou e quem distribuiu.": "Dónde nació el enlace, por dónde pasó y quién lo compartió.",
-    "Links detetados por país": "Enlaces detectados por país",
-    "Ver análise": "Ver análisis",
-    "Cada país tem a sua cor. Quando muda de país, muda de cor.": "Cada país tiene su color. El color cambia según el país.",
+    "Mapa": "Mapa",
+    "Mapa de investigação": "Mapa de investigación",
+    "Mapa manual para organizar visualmente uma investigação. Não rastreia links, partilhas ou pessoas.": "Mapa manual para organizar visualmente una investigación. No rastrea enlaces, publicaciones ni personas.",
+    "Pesquisar contexto externo": "Buscar contexto externo",
+    "Escreve palavras-chave ou aceita a descrição do Gemini. Só o texto será enviado para a pesquisa; a imagem não será partilhada.": "Escribe palabras clave o usa la descripción de Gemini. Solo se envía texto a la búsqueda; la imagen no se comparte.",
+    "Pesquisar imagens e notícias relacionadas": "Buscar imágenes y noticias relacionadas",
+    "A escrever pelo menos 2 caracteres.": "Escribe al menos 2 caracteres.",
+    "A pesquisar fontes...": "Buscando fuentes...",
+    "Não foi possível pesquisar as fontes. Tenta novamente.": "No se pudieron buscar las fuentes. Inténtalo de nuevo.",
+    "Imagens relacionadas": "Imágenes relacionadas",
+    "Notícias relacionadas": "Noticias relacionadas",
+    "Sem imagens relacionadas encontradas.": "No se encontraron imágenes relacionadas.",
+    "Sem notícias encontradas.": "No se encontraron noticias.",
+    "Pesquisa textual: estes resultados não confirmam correspondência visual.": "Búsqueda textual: estos resultados no confirman coincidencias visuales.",
+    "A pesquisa de imagens está temporariamente indisponível.": "La búsqueda de imágenes no está disponible temporalmente.",
+    Licença: "Licencia",
+    "Licença:": "Licencia:",
+    Criador: "Creador",
+    "Criador:": "Creador:",
+    Consulta: "Consulta de búsqueda",
+    "Ver fonte": "Ver fuente",
+    "Metadados da imagem": "Metadatos de la imagen",
+    Fabricante: "Fabricante",
+    Modelo: "Modelo",
+    Software: "Software",
+    "Data de captura": "Fecha de captura",
+    "A imagem inclui dados de GPS; as coordenadas não são apresentadas.": "La imagen contiene datos GPS; no se muestran las coordenadas.",
+    "Os metadados podem ser removidos ou alterados; não são prova de origem.": "Los metadatos pueden eliminarse o alterarse; no son prueba del origen.",
+    "A pesquisa envia apenas o texto da consulta; a imagem não é enviada.": "Solo se envía el texto de búsqueda; no se envía la imagen.",
+    "Fontes opcionais sem chave:": "Fuentes opcionales sin clave:",
+    "Algumas fontes falharam:": "Algunas fuentes fallaron:",
+    "Mapa manual": "Mapa manual",
+    "Clica num país para o colorir. O mapa não mostra a origem nem a circulação de imagens.": "Haz clic en un país para colorearlo. El mapa no muestra el origen ni la circulación de imágenes.",
     Analisar: "Analizar",
     Histórico: "Historial",
     Ajuda: "Ayuda",
@@ -160,7 +250,6 @@ const translations = {
     Definições: "Ajustes",
     "Voltar para a pesquisa": "Volver a la búsqueda",
     "Voltar para o histórico": "Volver al historial",
-    "Voltar para EkthetoRadar": "Volver a EkthetoRadar",
     "Voltar para Definições": "Volver a Ajustes",
     "Voltar para o resultado": "Volver al resultado",
     "Limpar histórico": "Borrar historial",
@@ -177,14 +266,6 @@ const translations = {
     "Porque isto acontece": "Por qué ocurre",
     "O que isto não prova": "Qué no demuestra",
     "Toca em Voltar para ver os outros itens.": "Toca en Volver para ver los demás elementos.",
-    "Avisos do Radar": "Avisos del Radar",
-    "Quando é que queres receber avisos?": "¿Cuándo quieres recibir avisos?",
-    "Avisos ligados": "Avisos activados",
-    "Recebe todos os avisos do Radar.": "Recibe todos los avisos del Radar.",
-    "Só alerta alto": "Solo alertas importantes",
-    "Recebe apenas avisos importantes.": "Recibe solo avisos importantes.",
-    "Sem avisos": "Sin avisos",
-    "Não mostrar avisos do Radar.": "No mostrar avisos del Radar.",
     "Escolhe o idioma": "Elige el idioma",
     Idioma: "Idioma",
     "Como analisar uma imagem?": "¿Cómo analizar una imagen?",
@@ -314,17 +395,190 @@ function renderAnalyze() {
           </span>
         </label>
         <p id="file-details" class="file-details" aria-live="polite"></p>
+        <label class="gemini-consent">
+          <input id="gemini-consent" type="checkbox" />
+          <span>
+            <strong>Análise complementar com Gemini (opcional)</strong>
+            <small>Se selecionares, a imagem também será enviada ao Google para análise complementar.</small>
+          </span>
+        </label>
         <button id="analyze-button" class="primary-button analyze-button" type="submit" disabled>Analisar</button>
       </form>
       <div class="upload-notes">
         <p class="format-note">JPG, JPEG, PNG, WEBP ou BMP · Até 100 MB · 50 MP</p>
-        <p class="privacy-note">A imagem fica só nesta sessão.</p>
+        <p class="privacy-note">A Ektheto não guarda a imagem. A análise principal envia-a ao Sightengine; o Gemini só a recebe se selecionares a opção.</p>
       </div>
       ${resultHtml}
       ${renderTools()}
     </section>`;
   bindUpload();
   document.querySelector("#image-form").addEventListener("submit", analyzeSelectedImage);
+}
+
+function renderGeminiAssessment(result) {
+  if (!result) return "";
+  if (result.estado === "erro") {
+    const messages = {
+      gemini_not_configured: "Gemini não configurado. Adiciona a chave no servidor.",
+      gemini_model_not_configured: "Modelo Gemini não disponível.",
+      gemini_credentials_invalid: "Credenciais Gemini inválidas.",
+      gemini_rate_limit: "Limite Gemini atingido. Tenta novamente mais tarde.",
+      gemini_model_unavailable: "Modelo Gemini não disponível.",
+      gemini_timeout: "Gemini demorou demasiado a responder.",
+      gemini_unavailable: "Gemini temporariamente indisponível.",
+      gemini_upstream_error: "Gemini temporariamente indisponível.",
+      gemini_response_blocked: "Gemini devolveu uma resposta inválida.",
+      gemini_invalid_response: "Gemini devolveu uma resposta inválida.",
+      gemini_invalid_image: "Não foi possível concluir a análise complementar.",
+    };
+    return `<article class="info-card gemini-assessment"><h2>Análise complementar do Gemini</h2><p>${messages[result.codigo] || "Não foi possível concluir a análise complementar."}</p></article>`;
+  }
+
+  const assessment = result.avaliacao;
+  if (result.estado !== "ok" || !assessment) return "";
+  const renderList = (title, items) => {
+    if (!Array.isArray(items) || items.length === 0) return "";
+    return `<section class="gemini-list"><h3>${title}</h3><ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></section>`;
+  };
+  return `
+    <article class="info-card gemini-assessment">
+      <h2>Análise complementar do Gemini</h2>
+      <h3>Descrição visual</h3><p>${escapeHtml(assessment.descricao)}</p>
+      ${renderList("Texto visível", assessment.texto_visivel)}
+      ${renderList("Pistas observadas", assessment.pistas_visuais)}
+      ${renderList("Hipóteses para verificar", assessment.hipoteses)}
+      ${renderList("Verificações sugeridas", assessment.verificacoes_sugeridas)}
+      <h3>Limitações</h3><p>${escapeHtml(assessment.limitacoes)}</p>
+      <p class="gemini-disclaimer">A análise do Gemini pode conter erros e não confirma autenticidade.</p>
+    </article>`;
+}
+
+function renderImageMetadata(metadata) {
+  if (!metadata || typeof metadata !== "object") return "";
+  const fields = [
+    ["Fabricante", metadata.camera_make],
+    ["Modelo", metadata.camera_model],
+    ["Software", metadata.software],
+    ["Data de captura", metadata.captured_at],
+  ].filter(([, value]) => typeof value === "string" && value.trim());
+  if (metadata.gps_data_present) {
+    fields.push(["GPS", "A imagem inclui dados de GPS; as coordenadas não são apresentadas."]);
+  }
+  if (!fields.length) return "";
+  return `
+    <article class="info-card image-metadata">
+      <h2>Metadados da imagem</h2>
+      <dl>${fields.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}</dl>
+      <p>Os metadados podem ser removidos ou alterados; não são prova de origem.</p>
+    </article>`;
+}
+
+function renderSourceSearch(gemini) {
+  const assessment = gemini?.estado === "ok" ? gemini.avaliacao : null;
+  const query = assessment
+    ? [assessment.descricao, ...(assessment.texto_visivel || []), ...(assessment.pistas_visuais || [])]
+      .filter((value) => typeof value === "string" && value.trim())
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .slice(0, 200)
+    : "";
+  return `
+    <article class="info-card source-search">
+      <h2>Pesquisar contexto externo</h2>
+      <p>Escreve palavras-chave ou aceita a descrição do Gemini. Só o texto será enviado para a pesquisa; a imagem não será partilhada.</p>
+      <label for="source-search-query">Consulta</label>
+      <input id="source-search-query" type="search" maxlength="200" value="${escapeHtml(query)}">
+      <button class="secondary-button" type="button" data-action="search-sources">Pesquisar imagens e notícias relacionadas</button>
+      <p class="source-search-note">A pesquisa envia apenas o texto da consulta; a imagem não é enviada.</p>
+      <p id="source-search-status" class="source-search-status" role="status" aria-live="polite"></p>
+      <div id="source-search-results"></div>
+    </article>`;
+}
+
+function renderSourceResults(payload) {
+  const imageResults = payload.imagens?.resultados || [];
+  const imageContent = payload.imagens?.estado === "erro"
+    ? "<p>A pesquisa de imagens está temporariamente indisponível.</p>"
+    : imageResults.length
+      ? `<div class="source-image-grid">${imageResults.map((image) => `
+          <article class="source-image">
+            <img src="${escapeHtml(image.thumbnail_url)}" alt="${escapeHtml(image.title)}" loading="lazy" referrerpolicy="no-referrer">
+            <div><h4>${escapeHtml(image.title)}</h4>
+              ${image.license ? `<p>Licença: ${escapeHtml(image.license)}</p>` : ""}
+              ${image.creator ? `<p>Criador: ${escapeHtml(image.creator)}</p>` : ""}
+              <a href="${escapeHtml(image.source_url)}" target="_blank" rel="noopener noreferrer">Ver fonte</a>
+            </div>
+          </article>`).join("")}</div>`
+      : "<p>Sem imagens relacionadas encontradas.</p>";
+
+  const providers = Object.values(payload.noticias?.provedores || {});
+  const stories = providers.flatMap((provider) => provider.artigos || []);
+  const providerNames = {
+    gdelt: "GDELT",
+    newsdata: "NewsData",
+    gnews: "GNews",
+    newsapi: "NewsAPI",
+  };
+  const providerEntries = Object.entries(payload.noticias?.provedores || {});
+  const unconfigured = providerEntries
+    .filter(([, provider]) => provider.estado === "nao_configurado")
+    .map(([name]) => providerNames[name] || name);
+  const failed = providerEntries
+    .filter(([, provider]) => provider.estado === "erro")
+    .map(([name, provider]) => `${providerNames[name] || name}: ${provider.codigo || "erro"}`);
+  const newsContent = stories.length
+    ? `<ul class="source-news-list">${stories.map((story) => `
+        <li><a href="${escapeHtml(story.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(story.titulo)}</a><span>${escapeHtml(story.fonte)}</span></li>`).join("")}</ul>`
+    : "<p>Sem notícias encontradas.</p>";
+  const newsStatus = [
+    unconfigured.length
+      ? `<p class="source-search-note"><span>Fontes opcionais sem chave:</span> ${escapeHtml(unconfigured.join(", "))}.</p>`
+      : "",
+    failed.length
+      ? `<p class="source-search-note"><span>Algumas fontes falharam:</span> ${escapeHtml(failed.join("; "))}.</p>`
+      : "",
+  ].join("");
+
+  return `
+    <section class="source-results">
+      <h3>Imagens relacionadas</h3>${imageContent}
+      <h3>Notícias relacionadas</h3>${newsContent}${newsStatus}
+      <p class="source-search-note">Pesquisa textual: estes resultados não confirmam correspondência visual.</p>
+    </section>`;
+}
+
+async function searchInvestigationSources(button) {
+  const input = pageContent.querySelector("#source-search-query");
+  const status = pageContent.querySelector("#source-search-status");
+  const results = pageContent.querySelector("#source-search-results");
+  if (!input || !status || !results) return;
+  const query = input?.value.trim() || "";
+  if (query.length < 2) {
+    status.textContent = "A escrever pelo menos 2 caracteres.";
+    input?.focus();
+    return;
+  }
+
+  button.disabled = true;
+  status.textContent = "A pesquisar fontes...";
+  results.replaceChildren();
+  try {
+    const response = await fetch(apiUrl("/api/investigation/sources"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: query.slice(0, 200), pais: "ao", limite: 3 }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.detail || "source_search_error");
+    results.innerHTML = renderSourceResults(payload);
+    status.textContent = "";
+    applyTranslations();
+  } catch (error) {
+    console.error("Could not search investigation sources.", error);
+    status.textContent = "Não foi possível pesquisar as fontes. Tenta novamente.";
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function renderHistory() {
@@ -430,36 +684,18 @@ function renderResult(id) {
       <p class="page-intro">${escapeHtml(result.name)}</p>
       <article class="info-card"><h2>${escapeHtml(result.verdictText)}</h2><p class="result-score">${Math.round(result.score * 100)}% sinais de geração por IA</p></article>
       ${result.deepfakeScore == null ? "" : `<article class="info-card"><h2>Manipulação facial</h2><p>${Math.round(result.deepfakeScore * 100)}% de confiança do modelo.</p></article>`}
+      ${renderImageMetadata(result.metadata)}
+      ${renderGeminiAssessment(result.gemini)}
+      ${renderSourceSearch(result.gemini)}
       <button class="primary-button page-action" type="button" data-route="porque-${result.id}">Como foi feita a pesquisa</button>
     </section>`;
 }
 
-const countries = {
-  angola: {
-    title: "Angola · Origem",
-    link: "exemplo.com/foto-falsa · Partilhado 12 mil vezes",
-    color: "País: Angola · Cor: Preto. Quando muda de país, muda de cor.",
-    distributor: "Distribuidor: Conta em Luanda · Primeira partilha: Luanda · 89% Geração por IA.",
-  },
-  brasil: {
-    title: "Brasil · Distribuidor",
-    link: "exemplo.com/foto-falsa · Partilhado 5 mil vezes",
-    color: "País: Brasil · Cor: Cinzento médio.",
-    distributor: "Distribuidor: Página no Brasil · Primeira partilha: Brasil.",
-  },
-  portugal: {
-    title: "Portugal · Partilha",
-    link: "exemplo.com/foto-falsa · Partilhado 5 mil vezes",
-    color: "País: Portugal · Cor: Cinzento claro.",
-    distributor: "Distribuidor: Página em Lisboa · Primeira partilha: Lisboa · Em análise.",
-  },
-};
-
 function renderRadar() {
   pageContent.innerHTML = `
     <section class="page radar-page">
-      <h1>EkthetoRadar</h1>
-      <p class="radar-intro">Onde o link nasceu, por onde passou e quem distribuiu.</p>
+      <h1>Mapa de investigação</h1>
+      <p class="radar-intro">Mapa manual para organizar visualmente uma investigação. Não rastreia links, partilhas ou pessoas.</p>
       <figure class="radar-card radar-map-card">
         <div class="radar-map-toolbar" aria-label="Controlos do mapa">
           <label class="map-tool-group" for="radar-country-color">
@@ -479,43 +715,11 @@ function renderRadar() {
         </div>
         <p class="radar-map-message" id="radar-map-message" role="status" aria-live="polite">A carregar mapa...</p>
       </figure>
-      <figure class="radar-card">
-        <svg class="radar-illustration" viewBox="0 0 600 220" role="img" aria-label="Gráfico de radar com pontos de distribuição">
-          <path class="radar-sector" d="M300 110 365 55 394 139 300 110z"/>
-          <g class="radar-grid"><circle cx="300" cy="110" r="26"/><circle cx="300" cy="110" r="50"/><circle cx="300" cy="110" r="74"/><circle cx="300" cy="110" r="98"/><path d="M300 0v220M190 110h220"/></g>
-          <g class="radar-dots"><circle cx="237" cy="43" r="5"/><circle cx="266" cy="73" r="5"/><circle cx="333" cy="112" r="5"/><circle cx="307" cy="145" r="5"/><circle cx="363" cy="138" r="5"/><circle cx="245" cy="166" r="5"/></g>
-        </svg>
-      </figure>
-      <figure class="radar-card">
-        <svg class="radar-illustration" viewBox="0 0 600 220" role="img" aria-label="Globo com pontos de origem e distribuição">
-          <g class="globe-grid"><ellipse cx="300" cy="110" rx="76" ry="76"/><ellipse cx="300" cy="110" rx="42" ry="76"/><ellipse cx="300" cy="110" rx="16" ry="76"/><path d="M224 110h152M236 72h128M236 148h128"/></g>
-          <g class="globe-points"><circle cx="250" cy="57" r="5"/><circle cx="376" cy="110" r="5"/><circle cx="356" cy="158" r="5"/></g>
-          <g class="globe-labels"><text x="224" y="55">A</text><text x="387" y="116">C</text><text x="365" y="174">B</text></g>
-        </svg>
-      </figure>
-      <figure class="radar-card radar-chart-card">
-        <svg class="radar-illustration" viewBox="0 0 600 200" role="img" aria-label="Links detetados por país">
-          <text class="chart-title" x="34" y="48">Links detetados por país</text>
-          <g class="chart-bars">
-            <rect x="34" y="112" width="96" height="17"/><rect x="138" y="101" width="96" height="28" class="bar-muted"/>
-            <rect x="242" y="100" width="96" height="29"/><rect x="346" y="82" width="96" height="47" class="bar-muted"/>
-            <rect x="450" y="112" width="96" height="17"/>
-          </g>
-          <g class="chart-labels"><text x="82" y="155">Angola</text><text x="186" y="155">Brasil</text><text x="290" y="155">Portugal</text><text x="394" y="155">EUA</text><text x="498" y="155">França</text></g>
-        </svg>
-      </figure>
-      <section class="radar-links" aria-label="Links detetados">
-        <article class="radar-link">
-          <div><h2>Link: exemplo.com/foto-falsa <span>— País: Angola</span></h2><p>Distribuidor: Conta em Luanda — 89% Geração por IA</p></div>
-          <button type="button" data-route="pais-angola">Ver análise</button>
-        </article>
-        <article class="radar-link">
-          <div><h2>Link: exemplo.com/video-falso <span>— País: Brasil</span></h2><p>Distribuidor: Grupo em São Paulo — 64% Manipulação</p></div>
-          <button type="button" data-route="pais-brasil">Ver análise</button>
-        </article>
-      </section>
-      <button class="primary-button radar-analyze-button" type="button" data-route="analisar">Analisar uma imagem</button>
-      <p class="radar-footnote">Cada país tem a sua cor. Quando muda de país, muda de cor.</p>
+      <article class="info-card">
+        <h2>Mapa manual</h2>
+        <p>Clica num país para o colorir. O mapa não mostra a origem nem a circulação de imagens.</p>
+      </article>
+      <button class="primary-button page-action" type="button" data-route="analisar">Analisar uma imagem</button>
     </section>`;
   bindRadarMap();
 }
@@ -689,35 +893,6 @@ async function bindRadarMap() {
   }
 }
 
-function renderCountry(country) {
-  const info = countries[country];
-  pageContent.innerHTML = `
-    <section class="page">
-      ${pageHeading(info.title, "radar", "Voltar para EkthetoRadar")}
-      <p class="page-intro">Tocaste no ponto do mapa. Aqui está o que o Radar encontrou.</p>
-      <article class="info-card"><h2>Link detetado</h2><p>${info.link}</p></article>
-      <article class="info-card"><h2>País e cor</h2><p>${info.color} Quando muda de país, muda de cor.</p></article>
-      <article class="info-card"><h2>Distribuidor</h2><p>${info.distributor}</p></article>
-      <p class="touch-hint">Toca noutro país para ver o seu distribuidor.</p>
-      <button class="primary-button page-action" type="button" data-route="radar">Voltar para EkthetoRadar</button>
-    </section>`;
-}
-
-function renderAlerts() {
-  const selectedAlert = sessionStorage.getItem("ektheto-radar-alerts");
-  pageContent.innerHTML = `
-    <section class="page">
-      ${pageHeading("Avisos do Radar", "definicoes", "Voltar para Definições")}
-      <p class="page-intro">Quando é que queres receber avisos?</p>
-      <div class="choice-list">
-        <button class="choice-item ${selectedAlert === "all" ? "selected" : ""}" data-alert="all"><strong>Avisos ligados</strong><span>Recebe todos os avisos do Radar.</span></button>
-        <button class="choice-item ${selectedAlert === "high" ? "selected" : ""}" data-alert="high"><strong>Só alerta alto</strong><span>Recebe apenas avisos importantes.</span></button>
-        <button class="choice-item ${selectedAlert === "off" ? "selected" : ""}" data-alert="off"><strong>Sem avisos</strong><span>Não mostrar avisos do Radar.</span></button>
-      </div>
-      <button class="primary-button page-action" type="button" data-route="definicoes">Voltar para Definições</button>
-    </section>`;
-}
-
 function renderHelp() {
   pageContent.innerHTML = `
     <section class="page">
@@ -771,7 +946,7 @@ function renderAbout() {
   pageContent.innerHTML = `
     <section class="page">
       ${pageHeading("Sobre")}
-      <p class="about-tagline">Expor o que é falso. Revelar o que é real.</p>
+      <p class="about-tagline">Investigar com cuidado. Verificar com fontes.</p>
       <p class="page-intro">A Ektheto ajuda a investigar sinais numa imagem. O resultado é uma estimativa e não prova autenticidade.</p>
       <button class="primary-button page-action" type="button" data-route="analisar">Voltar para Analisar imagem</button>
     </section>`;
@@ -783,7 +958,6 @@ function renderSettings() {
       ${pageHeading("Definições")}
       <button class="settings-item" type="button" data-route="idioma"><strong>Idioma</strong><span>${sessionStorage.getItem("ektheto-language") || "Português"} · Escolhe o idioma</span></button>
       <button class="settings-item" type="button" data-route="historico"><strong>Histórico da sessão</strong><span>Ver ou limpar o histórico</span></button>
-      <button class="settings-item" type="button" data-route="avisos-radar"><strong>Avisos do Radar</strong><span>Escolhe quando receber avisos</span></button>
       <button class="primary-button page-action" type="button" data-route="analisar">Voltar para Analisar imagem</button>
     </section>`;
 }
@@ -812,8 +986,6 @@ function renderPage(route) {
   else if (route === "historico") renderHistory();
   else if (route === "limpar-historico") renderDeleteHistory();
   else if (route === "radar") renderRadar();
-  else if (route.startsWith("pais-")) renderCountry(route.slice(5));
-  else if (route === "avisos-radar") renderAlerts();
   else if (route === "ajuda") renderHelp();
   else if (route === "tutorial") renderTutorial(0);
   else if (route === "sobre") renderAbout();
@@ -850,6 +1022,11 @@ function applyTranslations() {
 }
 
 pageContent.addEventListener("click", (event) => {
+  const searchSourcesButton = event.target.closest('[data-action="search-sources"]');
+  if (searchSourcesButton) {
+    searchInvestigationSources(searchSourcesButton);
+    return;
+  }
   const tutorialButton = event.target.closest("[data-tutorial-action]");
   if (tutorialButton) {
     const action = tutorialButton.dataset.tutorialAction;
@@ -869,21 +1046,11 @@ pageContent.addEventListener("click", (event) => {
     showApp("historico");
     return;
   }
-  const countryPoint = event.target.closest("[data-country]");
-  if (countryPoint) {
-    showApp(`pais-${countryPoint.dataset.country}`);
-    return;
-  }
   const languageButton = event.target.closest("[data-language]");
   if (languageButton) {
     sessionStorage.setItem("ektheto-language", languageButton.dataset.language);
     showApp("idioma");
     return;
-  }
-  const alertButton = event.target.closest("[data-alert]");
-  if (alertButton) {
-    sessionStorage.setItem("ektheto-radar-alerts", alertButton.dataset.alert);
-    renderAlerts();
   }
 });
 
@@ -966,9 +1133,18 @@ async function analyzeSelectedImage(event) {
   status.textContent = "A imagem está a ser analisada.";
   const body = new FormData();
   body.append("file", selectedFile);
+  body.append("use_gemini", String(Boolean(document.querySelector("#gemini-consent")?.checked)));
+  const locale = sessionStorage.getItem("ektheto-language") || "Português";
+  body.append("language", locale === "English" ? "en" : locale === "Español" ? "es" : "pt");
   try {
-    const response = await fetch("/api/analyze", { method: "POST", body });
-    const payload = await response.json();
+    if (!API_BASE_URL) throw new Error("api_not_configured");
+    const response = await fetch(apiUrl("/api/analyze"), { method: "POST", body });
+    let payload;
+    try {
+      payload = await response.json();
+    } catch {
+      throw new Error("api_unavailable");
+    }
     if (!response.ok) throw new Error(payload.detail || "analysis_error");
     const verdictText = {
       high: "Sinais elevados de geração por IA",
@@ -982,6 +1158,8 @@ async function analyzeSelectedImage(event) {
       verdict: payload.verdict,
       verdictText,
       deepfakeScore: payload.deepfake_score == null ? null : Number(payload.deepfake_score),
+      metadata: payload.metadata || null,
+      gemini: payload.gemini || null,
       createdAt: new Date().toISOString(),
     };
     saveHistory([item, ...getHistory()]);
@@ -995,6 +1173,9 @@ async function analyzeSelectedImage(event) {
     }
   } catch (error) {
     const messages = {
+      api_not_configured: "O serviço de análise ainda não está ligado. O backend Render precisa de ser publicado e configurado.",
+      api_unavailable: "O servidor de análise não respondeu corretamente. Verifica se o backend Render está ativo.",
+      network: "Não foi possível contactar o serviço de análise. Verifica a ligação e tenta novamente.",
       analysis_not_configured: "A análise ainda não está configurada neste servidor.",
       credentials: "O serviço de análise rejeitou as credenciais.",
       rate_limit: "O limite de análises foi atingido. Tenta novamente mais tarde.",
@@ -1007,7 +1188,8 @@ async function analyzeSelectedImage(event) {
       format: "Este formato de imagem não é suportado.",
       invalid: "Não foi possível validar a imagem. Experimenta outro ficheiro.",
     };
-    status.textContent = messages[String(error.message)] || "Não foi possível concluir a análise. Tenta novamente.";
+    const errorCode = error instanceof TypeError ? "network" : String(error.message);
+    status.textContent = messages[errorCode] || "Não foi possível concluir a análise. Tenta novamente.";
     button.disabled = false;
   } finally {
     const currentButton = document.querySelector("#analyze-button");

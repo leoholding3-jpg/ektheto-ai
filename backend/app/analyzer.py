@@ -56,6 +56,35 @@ def validate_image(data: bytes) -> str:
     return SUPPORTED_IMAGE_FORMATS[image_format]
 
 
+def extract_image_metadata(data: bytes) -> dict[str, str | bool | None]:
+    with Image.open(BytesIO(data)) as image:
+        exif = image.getexif()
+        exif_ifd = exif.get_ifd(34665)
+
+    def value(tag: int, exif_tag: int | None = None) -> str | None:
+        raw = exif.get(tag)
+        if raw is None and exif_tag is not None:
+            raw = exif_ifd.get(exif_tag)
+        if raw is None:
+            return None
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8", errors="replace")
+        text = str(raw).strip()
+        return text[:120] or None
+
+    return {
+        "camera_make": value(271),
+        "camera_model": value(272),
+        "software": value(305),
+        "captured_at": (
+            value(36867, 36867)
+            or value(36868, 36868)
+            or value(306)
+        ),
+        "gps_data_present": bool(exif.get(34853)),
+    }
+
+
 def prepare_image_for_provider(data: bytes, content_type: str) -> tuple[bytes, str]:
     try:
         with Image.open(BytesIO(data)) as source:
