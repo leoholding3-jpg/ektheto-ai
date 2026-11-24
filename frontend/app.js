@@ -1209,6 +1209,7 @@ function renderPage(route) {
 function applyTranslations() {
   const locale = getLanguage();
   document.documentElement.lang = locale === "English" ? "en" : locale === "Español" ? "es" : "pt";
+  document.querySelector("#cover-language").value = locale;
   const dictionary = translations[locale];
   translateSubtree(document.body, dictionary);
 }
@@ -1249,6 +1250,11 @@ translationObserver.observe(document.body, { childList: true, subtree: true });
 
 window.addEventListener("storage", (event) => {
   if (event.key === LANGUAGE_KEY) applyTranslations();
+});
+
+document.querySelector("#cover-language").addEventListener("change", (event) => {
+  localStorage.setItem(LANGUAGE_KEY, event.currentTarget.value);
+  applyTranslations();
 });
 
 pageContent.addEventListener("click", (event) => {

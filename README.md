@@ -13,6 +13,11 @@ and a manual map.
 - `render.yaml`: Render web-service configuration for the FastAPI backend
 - `Dockerfile`: optional container deployment
 
+The FastAPI backend already runs on Linux through Render and the Linux-based
+Docker image. The PWA is browser-based, so it does not need a separate Linux
+desktop build. The Linux CI workflow checks the backend on Python 3.12 and
+3.13 and validates the frontend JavaScript.
+
 Supabase, PostgreSQL persistence, user accounts and authentication are
 temporarily disabled. History stays in the current browser tab's
 `sessionStorage`; uploaded images are not retained by Ektheto.
@@ -28,6 +33,20 @@ python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 
 Open `http://127.0.0.1:8000`. Configure credentials only in `.env` or the
 hosting provider's secret settings; never commit populated secrets.
+
+### Linux (Ubuntu/Debian)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+cp .env.example .env
+# Set Sightengine credentials for live image analysis
+python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Open `http://127.0.0.1:8000`. The Linux CI workflow runs the test suite and
+JavaScript syntax checks on every push and pull request to `main`.
 
 ## Investigation providers
 
